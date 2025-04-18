@@ -10,10 +10,11 @@ using UnityEngine;
 
 namespace ItemBundles
 {
-    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.3.0")]
+    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.3.1")]
     [BepInDependency(REPOLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("nickklmao.repoconfig", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("bulletbot.moreupgrades", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("bulletbot.vanillaupgrades", BepInDependency.DependencyFlags.SoftDependency)]
     public class ItemBundles : BaseUnityPlugin
     {
         public static ItemBundles Instance { get; private set; } = null!;
@@ -32,12 +33,9 @@ namespace ItemBundles
         public ConfigEntry<int> config_debugFakePlayers { get; private set; }
         public ConfigEntry<bool> config_debugLogging { get; private set; }
 
-        public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfo = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
-        public Dictionary<string, BundleShopInfo> itemBundleInfo = new Dictionary<string, BundleShopInfo>();
+        public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
+        public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
 
-
-        public ConfigEntry<bool> enableMoreUpgradesCompat { get; private set; }
-        public bool moreUpgradesLoaded;
         public class BundleShopInfo
         {
             public Item bundleItem;
@@ -65,19 +63,21 @@ namespace ItemBundles
             this.gameObject.transform.parent = null;
             this.gameObject.hideFlags = HideFlags.HideAndDontSave;
 
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.moreupgrades"))
-            {
-                moreUpgradesLoaded = true;
-            }
-
             CreateConfigs();
 
             Patch();
 
             RegisterItemBundles();
-            if (moreUpgradesLoaded)
+
+            if ( MoreUpgradesCompat.enabled )
             {
                 MoreUpgradesCompat.InitCompat();
+                ItemBundlesLogger.LogInfo($"MoreUpgradesCompat has loaded!", true);
+            }
+            if (VanillaUpgradesCompat.enabled)
+            {
+                VanillaUpgradesCompat.InitCompat();
+                ItemBundlesLogger.LogInfo($"VanillaUpgradesCompat has loaded!", true);
             }
 
             ItemBundlesLogger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
@@ -125,34 +125,34 @@ namespace ItemBundles
                 return;
             }
 
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Map Player Count Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Energy Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Extra Jump Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Grab Range Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Grab Strength Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Map Player Count Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Energy Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Extra Jump Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Grab Range Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Grab Strength Bundle");
             //RegisterBundleItem(assetBundle, "Item Upgrade Player Grab Throw Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Health Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Sprint Speed Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Upgrade Player Tumble Launch Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Health Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Sprint Speed Bundle");
+            InitializeBundle(assetBundle, "Item Upgrade Player Tumble Launch Bundle");
 
-            RegisterBundleItemCustom(assetBundle, "Item Health Pack Small Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Health Pack Medium Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Health Pack Large Bundle");
+            InitializeBundle(assetBundle, "Item Health Pack Small Bundle");
+            InitializeBundle(assetBundle, "Item Health Pack Medium Bundle");
+            InitializeBundle(assetBundle, "Item Health Pack Large Bundle");
 
-            RegisterBundleItemCustom(assetBundle, "Item Grenade Explosive Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Grenade Shockwave Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Grenade Stun Bundle");
+            InitializeBundle(assetBundle, "Item Grenade Explosive Bundle");
+            InitializeBundle(assetBundle, "Item Grenade Shockwave Bundle");
+            InitializeBundle(assetBundle, "Item Grenade Stun Bundle");
 
-            RegisterBundleItemCustom(assetBundle, "Item Mine Explosive Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Mine Shockwave Bundle");
-            RegisterBundleItemCustom(assetBundle, "Item Mine Stun Bundle");
+            InitializeBundle(assetBundle, "Item Mine Explosive Bundle");
+            InitializeBundle(assetBundle, "Item Mine Shockwave Bundle");
+            InitializeBundle(assetBundle, "Item Mine Stun Bundle");
 
-            if (moreUpgradesLoaded)
+            if ( MoreUpgradesCompat.enabled )
             {
-                MoreUpgradesCompat.RegisterBundleItem_MoreUpgrades(assetBundle, "Modded Item Upgrade Player Map Enemy Tracker Bundle");
-                MoreUpgradesCompat.RegisterBundleItem_MoreUpgrades(assetBundle, "Modded Item Upgrade Player Map Player Tracker Bundle");
-                MoreUpgradesCompat.RegisterBundleItem_MoreUpgrades(assetBundle, "Modded Item Upgrade Player Sprint Usage Bundle");
-                MoreUpgradesCompat.RegisterBundleItem_MoreUpgrades(assetBundle, "Modded Item Upgrade Player Valuable Count Bundle");
+                InitializeBundle(assetBundle, "Modded Item Upgrade Player Map Enemy Tracker Bundle", "MoreUpgrades ");
+                InitializeBundle(assetBundle, "Modded Item Upgrade Player Map Player Tracker Bundle", "MoreUpgrades ");
+                InitializeBundle(assetBundle, "Modded Item Upgrade Player Sprint Usage Bundle", "MoreUpgrades ");
+                InitializeBundle(assetBundle, "Modded Item Upgrade Player Valuable Count Bundle", "MoreUpgrades ");
             }
         }
 
@@ -165,36 +165,28 @@ namespace ItemBundles
             config_minConsumablePerBundle = Config.Bind("General", "Mininum consumables per bundle", 0, new ConfigDescription("Minimum amount of items in consumable bundles. Price still scales. Default: 0", new AcceptableValueRange<int>(0, 10)));
             config_priceMultiplier = Config.Bind("General", "Bundle Price Multiplier", 66.66f, new ConfigDescription("Multiplier of total item costs that bundles have", new AcceptableValueRange<float>(0f, 200f)));
 
-            var displayMoreUpgradesConfig = "";
-            if (!moreUpgradesLoaded)
-            {
-                displayMoreUpgradesConfig = "HideFromREPOConfig";
-            }
-            enableMoreUpgradesCompat = Config.Bind("Mod Compatibility", "Enable More Upgrades Compatability", false, new ConfigDescription("[EXPERIMENTAL, Requires Restart] More Upgrades support is only partially done. See mod page for more info and expect issues!", null, displayMoreUpgradesConfig));
-
-
             string overrideDesc = "Has Priority over General entry. Ignored if set below 0";
-            itemTypeBundleInfo[SemiFunc.itemType.mine] = new BundleShopInfo
+            itemTypeBundleInfos[SemiFunc.itemType.mine] = new BundleShopInfo
             {
                 config_chanceInShop = Config.Bind("Bundles: Item Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
                 config_maxInShop = Config.Bind("Bundles: Item Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
                 config_minPerBundle = Config.Bind("Bundles: Item Type", "Mines: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
                 config_priceMultiplier = Config.Bind("Bundles: Item Type", "Mines: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
-            itemTypeBundleInfo[SemiFunc.itemType.grenade] = new BundleShopInfo
+            itemTypeBundleInfos[SemiFunc.itemType.grenade] = new BundleShopInfo
             {
                 config_chanceInShop = Config.Bind("Bundles: Item Type", "Grenades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
                 config_maxInShop = Config.Bind("Bundles: Item Type", "Grenades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
                 config_minPerBundle = Config.Bind("Bundles: Item Type", "Grenades: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
                 config_priceMultiplier = Config.Bind("Bundles: Item Type", "Grenades: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
-            itemTypeBundleInfo[SemiFunc.itemType.healthPack] = new BundleShopInfo
+            itemTypeBundleInfos[SemiFunc.itemType.healthPack] = new BundleShopInfo
             {
                 config_chanceInShop = Config.Bind("Bundles: Item Type", "Health Packs: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
                 config_maxInShop = Config.Bind("Bundles: Item Type", "Health Packs: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
                 config_priceMultiplier = Config.Bind("Bundles: Item Type", "Health Packs: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
-            itemTypeBundleInfo[SemiFunc.itemType.item_upgrade] = new BundleShopInfo
+            itemTypeBundleInfos[SemiFunc.itemType.item_upgrade] = new BundleShopInfo
             {
                 config_chanceInShop = Config.Bind("Bundles: Item Type", "Upgrades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
                 config_maxInShop = Config.Bind("Bundles: Item Type", "Upgrades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
@@ -217,7 +209,7 @@ namespace ItemBundles
             REPOLib.Modules.Items.RegisterItem(item);
         }
 
-        internal void RegisterBundleItemCustom(AssetBundle assetBundle, string bundleItemString, string configSectionPrefix = "")
+        internal void InitializeBundle(AssetBundle assetBundle, string bundleItemString, string configSectionPrefix = "")
         {
             Item bundleItem = assetBundle.LoadAsset<Item>(bundleItemString);
             if (bundleItem == null)
@@ -242,12 +234,20 @@ namespace ItemBundles
                 return;
             }
 
-            if (itemBundleInfo.ContainsKey(originalItemString))
+            if (itemBundleInfos.ContainsKey(originalItemString))
             {
-                ItemBundlesLogger.LogWarning($"--- bundleStringPairs {originalItemString} already has an entry {itemBundleInfo[originalItemString]}, we are overriding something!");
+                ItemBundlesLogger.LogWarning($"--- bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
             }
 
             itemDictionaryShopBlacklist.Add(bundleItem.itemAssetName, bundleItem);
+
+            // Update bundle upgrade prices to match original upgrades
+            if (bundleItem.itemType == SemiFunc.itemType.item_upgrade)
+            {
+                bundleItem.value = ScriptableObject.CreateInstance<Value>();
+                bundleItem.value.valueMin = originalItem.value.valueMin;
+                bundleItem.value.valueMax = originalItem.value.valueMax;
+            }
 
             string overrideDesc = "Has Priority over Item Type entry. Ignored if set below 0";
             var bundleInfo = new BundleShopInfo {
@@ -262,13 +262,7 @@ namespace ItemBundles
                 bundleInfo.config_minPerBundle = Config.Bind($"{configSectionPrefix}Bundles: Item", $"{originalItem.itemName}: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10)));
             }
 
-            if (configSectionPrefix == "MoreUpgrades " && !enableMoreUpgradesCompat.Value)
-            {
-                ItemBundlesLogger.LogInfo($"--- MoreUpgrades Compatibility not enabled, voiding bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}", true);
-                return;
-            }
-
-            itemBundleInfo[originalItemString] = bundleInfo;
+            itemBundleInfos[originalItemString] = bundleInfo;
             ItemBundlesLogger.LogInfo($"--- Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}" , true);
         }
 

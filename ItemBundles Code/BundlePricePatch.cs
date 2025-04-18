@@ -51,12 +51,8 @@ namespace ItemBundles
         [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.GetValue))]
         private static void GetValue_Prefix( ItemAttributes __instance)
         {
-            if (ItemBundles.Instance.moreUpgradesLoaded )
-            {
-                //Temp patch, overrides price scaling so that it uses base costs
-                //MoreUpgradesCompat.OverrideConfigs();
-            }
         }
+
         /// <summary>
         /// Additional code that runs after GetValue to make bundles scale based off of player count. 
         ///     Original method does not return anything so we just have to brute-force recalculate the costs.
@@ -69,8 +65,8 @@ namespace ItemBundles
             {
                 // We have a bundle, multiply price by a portion of player count
                 var bundleString = "Bundle";
-                var bundleItemName = __instance.itemAssetName;
-                if (bundleItemName.Contains(bundleString))
+                var bundleAssetName = __instance.itemAssetName;
+                if (bundleAssetName.Contains(bundleString))
                 {
                     var currentValue = __instance.value;
 
@@ -80,16 +76,26 @@ namespace ItemBundles
                     // Recalculate upgrade bundles to use base item instead of self, incase single upgrades have been bought
                     if (__instance.itemType == itemType.item_upgrade)
                     {
-                        float num = UnityEngine.Random.Range(__instance.itemValueMin, __instance.itemValueMax) * ShopManager.instance.itemValueMultiplier;
-                        if (num < 1000f)
+                        var mult = ShopManager.instance.itemValueMultiplier;
+                        var upgradeIncreaseMult = ShopManager.instance.upgradeValueIncrease;
+
+                        // Try to get configs for MoreUpgrade item bundles
+                        if ( bundleAssetName.Contains("Modded") && MoreUpgradesCompat.enabled )
                         {
-                            num = 1000f;
+                            mult = MoreUpgradesCompat.GetItemValueMultiplier(mult, bundleAssetName);
+                            upgradeIncreaseMult = MoreUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
                         }
-                        if (num >= 1000f)
+                        // Try to get config for VanillaUpgrades
+                        else if ( VanillaUpgradesCompat.enabled )
                         {
-                            num = Mathf.Ceil(num / 1000f);
+                            upgradeIncreaseMult = VanillaUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
                         }
-                        num += num * ShopManager.instance.upgradeValueIncrease * (float)StatsManager.instance.GetItemsUpgradesPurchased( BundleHelper.GetItemStringFromBundle(__instance.itemAssetName) );
+
+                        float num = UnityEngine.Random.Range(__instance.itemValueMin, __instance.itemValueMax) * mult;
+                        num = Mathf.Max(num, 1000f);
+                        num = Mathf.RoundToInt(num / 1000f);
+
+                        num += num * upgradeIncreaseMult * (float)StatsManager.instance.GetItemsUpgradesPurchased( BundleHelper.GetItemStringFromBundle(__instance.itemAssetName) );
 
                         __instance.value = (int)num;
                     }
@@ -107,7 +113,6 @@ namespace ItemBundles
                         var twoThirds = playerCount * priceMult;
                         currentValue = Mathf.RoundToInt(currentValue * twoThirds);
 
-                        ItemBundlesLogger.LogWarning($"---- ITEM VALUE INCREASED: {currentValue}");
                         __instance.value = currentValue;
 
                         if (GameManager.Multiplayer())
@@ -300,12 +305,12 @@ namespace ItemBundles
         private static void GetAllItemsFromStatsManager_Postfix(ShopManager __instance)
         {
             //TODO: Re-add max total bundles once I figure out how to not make it stop on first list.
-            foreach (KeyValuePair<itemType, ItemBundles.BundleShopInfo> bundleShopTypePairs in ItemBundles.Instance.itemTypeBundleInfo)
+            foreach (KeyValuePair<itemType, ItemBundles.BundleShopInfo> bundleShopTypePairs in ItemBundles.Instance.itemTypeBundleInfos)
             {
                 bundleShopTypePairs.Value.chanceInShop = bundleShopTypePairs.Value.config_chanceInShop.Value == -1 ? ItemBundles.Instance.config_chanceBundlesInShop.Value : bundleShopTypePairs.Value.config_chanceInShop.Value;
                 bundleShopTypePairs.Value.maxInShop = bundleShopTypePairs.Value.config_maxInShop.Value == -1 ? ItemBundles.Instance.config_maxBundlesInShop.Value : bundleShopTypePairs.Value.config_maxInShop.Value;
             }
-            foreach (KeyValuePair<string, ItemBundles.BundleShopInfo> bundleShopItemPairs in ItemBundles.Instance.itemBundleInfo)
+            foreach (KeyValuePair<string, ItemBundles.BundleShopInfo> bundleShopItemPairs in ItemBundles.Instance.itemBundleInfos)
             {
                 bundleShopItemPairs.Value.chanceInShop = bundleShopItemPairs.Value.config_chanceInShop.Value;
                 bundleShopItemPairs.Value.maxInShop = bundleShopItemPairs.Value.config_maxInShop.Value;
@@ -328,11 +333,11 @@ namespace ItemBundles
 
                 // Cant replace with a bundle if we don't have an entry at all
                 //TODO Add minimum number
-                if (ItemBundles.Instance.itemBundleInfo.ContainsKey(item.itemAssetName))
+                if (ItemBundles.Instance.itemBundleInfos.ContainsKey(item.itemAssetName))
                 {
                     ItemBundlesLogger.LogInfo($"-{num}- Found {item.itemAssetName} entry", true);
-                    var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfo[item.itemType];
-                    var itemBundleInfo = ItemBundles.Instance.itemBundleInfo[item.itemAssetName];
+                    var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfos[item.itemType];
+                    var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.itemAssetName];
 
                     float bundleFinalChance = BundleHelper.GetItemBundleChance(item);
                     bundleFinalChance /= 100f;

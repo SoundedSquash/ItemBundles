@@ -13,11 +13,18 @@ namespace ItemBundles
 
         public void Upgrade()
         {
-            var players = SemiFunc.PlayerGetAll();
-
-            foreach (var player in players)
+            if (itemToggle != null && VanillaUpgradesCompat.enabled)
             {
-                PunManager.instance.UpgradePlayerEnergy(SemiFunc.PlayerGetSteamID(player));
+                VanillaUpgradesCompat.UpgradeViaBundle(itemToggle);
+            }
+            else
+            {
+                var players = SemiFunc.PlayerGetAll();
+
+                foreach (var player in players)
+                {
+                    PunManager.instance.UpgradePlayerEnergy(SemiFunc.PlayerGetSteamID(player));
+                }
             }
         }
     }

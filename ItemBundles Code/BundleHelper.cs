@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using REPOLib;
+using MoreUpgrades.Classes;
 
 namespace ItemBundles
 {
@@ -12,10 +13,10 @@ namespace ItemBundles
     {
         public static int GetItemBundleChance(Item item)
         {
-            var output = ItemBundles.Instance.itemTypeBundleInfo[item.itemType].chanceInShop;
-            if (ItemBundles.Instance.itemBundleInfo[item.itemAssetName].chanceInShop >= 0)
+            var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].chanceInShop;
+            if (ItemBundles.Instance.itemBundleInfos[item.itemAssetName].chanceInShop >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfo[item.itemAssetName].chanceInShop;
+                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].chanceInShop;
             }
 
             return output;
@@ -23,10 +24,10 @@ namespace ItemBundles
 
         public static int GetItemBundleMax(Item item)
         {
-            var output = ItemBundles.Instance.itemTypeBundleInfo[item.itemType].maxInShop;
-            if (ItemBundles.Instance.itemBundleInfo[item.itemAssetName].maxInShop >= 0)
+            var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].maxInShop;
+            if (ItemBundles.Instance.itemBundleInfos[item.itemAssetName].maxInShop >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfo[item.itemAssetName].maxInShop;
+                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].maxInShop;
             }
 
             return output;
@@ -35,13 +36,13 @@ namespace ItemBundles
         public static int GetItemBundleMinItem(Item item)
         {
             var output = ItemBundles.Instance.config_minConsumablePerBundle.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfo[item.itemType].config_minPerBundle.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfo[item.itemType].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value;
             }
-            if ( ItemBundles.Instance.itemBundleInfo[item.itemAssetName].config_minPerBundle.Value >= 0)
+            if ( ItemBundles.Instance.itemBundleInfos[item.itemAssetName].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfo[item.itemAssetName].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].config_minPerBundle.Value;
             }
 
             return output;
@@ -50,13 +51,13 @@ namespace ItemBundles
         public static int GetItemBundleMinItem(string itemString, SemiFunc.itemType itemType)
         {
             var output = ItemBundles.Instance.config_minConsumablePerBundle.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfo[itemType].config_minPerBundle.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfo[itemType].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value;
             }
-            if (ItemBundles.Instance.itemBundleInfo[itemString].config_minPerBundle.Value >= 0)
+            if (ItemBundles.Instance.itemBundleInfos[itemString].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfo[itemString].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemBundleInfos[itemString].config_minPerBundle.Value;
             }
 
             return output;
@@ -65,13 +66,13 @@ namespace ItemBundles
         public static float GetItemBundlePriceMult(string itemString, SemiFunc.itemType itemType)
         {
             var output = ItemBundles.Instance.config_priceMultiplier.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfo[itemType].config_priceMultiplier.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[itemType].config_priceMultiplier.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfo[itemType].config_priceMultiplier.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[itemType].config_priceMultiplier.Value;
             }
-            if (ItemBundles.Instance.itemBundleInfo[itemString].config_priceMultiplier.Value >= 0)
+            if (ItemBundles.Instance.itemBundleInfos[itemString].config_priceMultiplier.Value >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfo[itemString].config_priceMultiplier.Value;
+                output = ItemBundles.Instance.itemBundleInfos[itemString].config_priceMultiplier.Value;
             }
 
             return output;
