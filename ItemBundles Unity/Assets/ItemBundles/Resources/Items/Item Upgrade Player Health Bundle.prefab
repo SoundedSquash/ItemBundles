@@ -24,7 +24,7 @@ GameObject:
   - component: {fileID: 169125681219301762}
   - component: {fileID: 114332607987018710}
   - component: {fileID: 114580298912866459}
-  - component: {fileID: 3994019522623169828}
+  - component: {fileID: 8857029285220783001}
   m_Layer: 0
   m_Name: Item Upgrade Player Health Bundle
   m_TagString: Untagged
@@ -110,8 +110,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3994019522623169828}
-        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradePlayerHealthBundle, ItemBundles
+      - m_Target: {fileID: 8857029285220783001}
+        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -508,7 +508,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &3994019522623169828
+--- !u!114 &8857029285220783001
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -517,9 +517,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1039535085813479}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 645912191, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: 1380761461, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalItem: {fileID: 11400000, guid: 9a152cd3ab80fa24d92112849030fc94, type: 2}
 --- !u!1 &1105940715264337
 GameObject:
   m_ObjectHideFlags: 0

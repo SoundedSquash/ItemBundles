@@ -5982,7 +5982,7 @@ GameObject:
   - component: {fileID: 169707925906392563}
   - component: {fileID: 114772561944185048}
   - component: {fileID: 114736511466849193}
-  - component: {fileID: 8101273781216582337}
+  - component: {fileID: 927479636554302405}
   m_Layer: 0
   m_Name: Item Upgrade Player Tumble Launch Bundle
   m_TagString: Untagged
@@ -6068,9 +6068,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 8101273781216582337}
-        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradePlayerTumbleLaunchBundle,
-          ItemBundles
+      - m_Target: {fileID: 927479636554302405}
+        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -6467,7 +6466,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &8101273781216582337
+--- !u!114 &927479636554302405
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6476,9 +6475,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1559955173072875}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1469398133, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: 1380761461, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalItem: {fileID: 11400000, guid: 13434e36d8bd34842b46793bece2863a, type: 2}
 --- !u!1 &1588600220621823
 GameObject:
   m_ObjectHideFlags: 0

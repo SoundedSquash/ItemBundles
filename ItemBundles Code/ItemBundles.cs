@@ -1,11 +1,8 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
-using BepInEx.Logging;
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using UnityEngine;
 
 namespace ItemBundles
@@ -40,6 +37,10 @@ namespace ItemBundles
         {
             public Item bundleItem;
             public int chanceInShop;
+            /// <summary>
+            /// Used to track how many are in current shop list
+            /// Resets every shop cycle
+            /// </summary>
             public int maxInShop;
             public ConfigEntry<int> config_chanceInShop;
             public ConfigEntry<int> config_maxInShop;
@@ -53,7 +54,7 @@ namespace ItemBundles
             if (Instance) return;
 
             Instance = this;
-            ItemBundlesLogger.Init(base.Logger);
+            DebugLogger.Init(base.Logger);
 
             string pluginFolderPath = Path.GetDirectoryName(Info.Location);
             string assetBundleFilePath = Path.Combine(pluginFolderPath, "itembundles");
@@ -72,15 +73,15 @@ namespace ItemBundles
             if ( MoreUpgradesCompat.enabled )
             {
                 MoreUpgradesCompat.InitCompat();
-                ItemBundlesLogger.LogInfo($"MoreUpgradesCompat has loaded!", true);
+                DebugLogger.LogInfo($"MoreUpgradesCompat has loaded!", true);
             }
             if (VanillaUpgradesCompat.enabled)
             {
                 VanillaUpgradesCompat.InitCompat();
-                ItemBundlesLogger.LogInfo($"VanillaUpgradesCompat has loaded!", true);
+                DebugLogger.LogInfo($"VanillaUpgradesCompat has loaded!", true);
             }
 
-            ItemBundlesLogger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
+            DebugLogger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
         }
 
 
@@ -88,8 +89,8 @@ namespace ItemBundles
         {
             if (assetBundle == null)
             {
-                ItemBundlesLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
-                ItemBundlesLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
+                DebugLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
+                DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
 
@@ -120,8 +121,8 @@ namespace ItemBundles
         {
             if (assetBundle == null)
             {
-                ItemBundlesLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
-                ItemBundlesLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
+                DebugLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
+                DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
 
@@ -202,7 +203,7 @@ namespace ItemBundles
             Item item = assetBundle.LoadAsset<Item>(itemString);
             if (item == null)
             {
-                ItemBundlesLogger.LogError($"Item {itemString} not found!");
+                DebugLogger.LogError($"Item {itemString} not found!");
                 return;
             }
 
@@ -214,14 +215,14 @@ namespace ItemBundles
             Item bundleItem = assetBundle.LoadAsset<Item>(bundleItemString);
             if (bundleItem == null)
             {
-                ItemBundlesLogger.LogError($"--- Bundle Item \"{bundleItemString}\" not found!");
+                DebugLogger.LogError($"--- Bundle Item \"{bundleItemString}\" not found!");
                 return;
             }
 
             var bundleString = " Bundle";
             if (!bundleItemString.Contains(bundleString))
             {
-                ItemBundlesLogger.LogError($"--- Item {bundleItemString} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
+                DebugLogger.LogError($"--- Item {bundleItemString} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
                 return;
             }
 
@@ -230,13 +231,13 @@ namespace ItemBundles
 
             if (!originalItem)
             {
-                ItemBundlesLogger.LogError($"--- Didn't find {originalItemString}! Make sure itemAssetName of bundle Item and bundle Prefab is {originalItemString + bundleString}");
+                DebugLogger.LogError($"--- Didn't find {originalItemString}! Make sure itemAssetName of bundle Item and bundle Prefab is {originalItemString + bundleString}");
                 return;
             }
 
             if (itemBundleInfos.ContainsKey(originalItemString))
             {
-                ItemBundlesLogger.LogWarning($"--- bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
+                DebugLogger.LogWarning($"--- bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
             }
 
             itemDictionaryShopBlacklist.Add(bundleItem.itemAssetName, bundleItem);
@@ -263,7 +264,7 @@ namespace ItemBundles
             }
 
             itemBundleInfos[originalItemString] = bundleInfo;
-            ItemBundlesLogger.LogInfo($"--- Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}" , true);
+            DebugLogger.LogInfo($"--- Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}" , true);
         }
 
         internal void Patch()

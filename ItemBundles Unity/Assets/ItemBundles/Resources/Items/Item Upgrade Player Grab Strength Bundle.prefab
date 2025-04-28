@@ -152,7 +152,7 @@ GameObject:
   - component: {fileID: 169299992750833000}
   - component: {fileID: 114186479847590301}
   - component: {fileID: 114134694134806330}
-  - component: {fileID: 3360096100020180150}
+  - component: {fileID: 1459425805660835401}
   m_Layer: 0
   m_Name: Item Upgrade Player Grab Strength Bundle
   m_TagString: Untagged
@@ -238,9 +238,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3360096100020180150}
-        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradePlayerGrabStrengthBundle,
-          ItemBundles
+      - m_Target: {fileID: 1459425805660835401}
+        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -637,7 +636,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &3360096100020180150
+--- !u!114 &1459425805660835401
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -646,9 +645,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1060896754448457}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -1883429538, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: 1380761461, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalItem: {fileID: 11400000, guid: 5caffc97221921741ad472a7024d4c65, type: 2}
 --- !u!1 &1065053567176411
 GameObject:
   m_ObjectHideFlags: 0

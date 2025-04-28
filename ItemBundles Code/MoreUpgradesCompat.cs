@@ -1,6 +1,4 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using MoreUpgrades.Classes;
+﻿using MoreUpgrades.Classes;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -33,14 +31,14 @@ namespace ItemBundles
                 {
                     REPOLib.Modules.Items.RegisterItem( newItem );
 
-                    ItemBundlesLogger.LogInfo($"-- MoreUpgradesCompat found bundle item: {newItem}", true);
-                    newItem.prefab.GetComponent<MoreUpgradesCompat_Bundle>().upgradeItemName = item.name;
-                    newItem.prefab.GetComponent<MoreUpgradesCompat_Bundle>().FixMaterial();
-                    newItem.prefab.GetComponent<MoreUpgradesCompat_Bundle>().FixLight();
+                    DebugLogger.LogInfo($"-- MoreUpgradesCompat found matching bundle item: {newItem}", true);
+                    newItem.prefab.GetComponent<ModdedItemUpgradeBundle>().upgradeItemName = item.name;
+                    newItem.prefab.GetComponent<ModdedItemUpgradeBundle>().FixMaterial();
+                    newItem.prefab.GetComponent<ModdedItemUpgradeBundle>().FixLight();
                 }
                 else
                 {
-                    ItemBundlesLogger.LogError($"-- MoreUpgradesCompat did not find bundle item", true);
+                    DebugLogger.LogError($"-- MoreUpgradesCompat did not find bundle item", true);
                 }
             }
         }
@@ -76,7 +74,7 @@ namespace ItemBundles
             Item obj = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItemName);
             if ( obj == null )
             {
-                ItemBundlesLogger.LogError($"- GetBoxMat {upgradeItemName} failed", true);
+                DebugLogger.LogError($"- GetBoxMat {upgradeItemName} failed", true);
                 return null;
             }
 
@@ -110,7 +108,7 @@ namespace ItemBundles
             Item obj = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItemName);
             if (obj == null)
             {
-                ItemBundlesLogger.LogError($"- GetLight {upgradeItemName} failed", true);
+                DebugLogger.LogError($"- GetLight {upgradeItemName} failed", true);
                 return null;
             }
 

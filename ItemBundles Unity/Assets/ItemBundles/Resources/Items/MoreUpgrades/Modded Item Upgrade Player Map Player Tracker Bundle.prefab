@@ -551,7 +551,7 @@ GameObject:
   - component: {fileID: 169929521686726616}
   - component: {fileID: 114480975478340645}
   - component: {fileID: 114889900805309581}
-  - component: {fileID: 4395261558739697761}
+  - component: {fileID: 2101713307399693477}
   m_Layer: 0
   m_Name: Modded Item Upgrade Player Map Player Tracker Bundle
   m_TagString: Untagged
@@ -637,8 +637,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4395261558739697761}
-        m_TargetAssemblyTypeName: ItemBundles.MoreUpgradesCompat_Bundle, ItemBundles
+      - m_Target: {fileID: 2101713307399693477}
+        m_TargetAssemblyTypeName: ItemBundles.ModdedItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -1035,7 +1035,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &4395261558739697761
+--- !u!114 &2101713307399693477
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1044,10 +1044,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1310192160991527}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 251692251, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: -2037644072, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  upgradeItemName: 
+  upgradeItemName: Modded Item Upgrade Player Map Player Tracker
 --- !u!1 &1325378142819298
 GameObject:
   m_ObjectHideFlags: 0

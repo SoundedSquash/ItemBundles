@@ -1,34 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ItemBundles
 {
-    public class MoreUpgradesCompat_Bundle : MonoBehaviour
+    public class ModdedItemUpgradeBundle : MonoBehaviour
     {
-        private ItemToggle itemToggle;
         public string upgradeItemName;
-
-        private void Start()
-        {
-            itemToggle = GetComponent<ItemToggle>();
-        }
 
         public void FixMaterial()
         {
-            var testMat = MoreUpgradesCompat.GetBoxMat(upgradeItemName);
-            if (testMat != null) 
+            var originalMat = MoreUpgradesCompat.GetBoxMat(upgradeItemName);
+            if (originalMat != null) 
             {
                 var meshFilters = GetComponentsInChildren<MeshFilter>();
                 foreach (MeshFilter meshF in meshFilters)
                 {
                     var meshR = meshF.GetComponent<MeshRenderer>();
                     if (meshR != null)
-                    {;
+                    {
                         if (meshR.materials[0].name.Contains("upgrade"))
                         {
-                            Material[] newMaterials = new Material[2] { testMat, meshR.materials[1] };
+                            Material[] newMaterials = new Material[2] { originalMat, meshR.materials[1] };
                             meshR.materials = newMaterials;
                         }
                     }
@@ -39,19 +30,23 @@ namespace ItemBundles
         public void FixLight()
         {
             var light = gameObject.transform.Find("Light - Small Lamp").GetComponent<Light>();
-            var light2 = MoreUpgradesCompat.GetLight(upgradeItemName);
-            if  (light != null && light2 != null)
+            var originalLight = MoreUpgradesCompat.GetLight(upgradeItemName);
+            if  (light != null && originalLight != null)
             {
 
-                light.color = light2.color;
+                light.color = originalLight.color;
             }
         }
 
-
         public void Upgrade()
         {
-            var players = SemiFunc.PlayerGetAll();
+            if ( string.IsNullOrEmpty(upgradeItemName) )
+            {
+                DebugLogger.LogError("upgradeItemName was empty! Cannot upgrade");
+                return;
+            }
 
+            var players = SemiFunc.PlayerGetAll();
             foreach (var player in players)
             {
                 var steamId = SemiFunc.PlayerGetSteamID(player);

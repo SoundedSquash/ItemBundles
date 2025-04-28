@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disabled: 0
   itemAssetName: Modded Item Upgrade Player Sprint Usage Bundle
-  itemName: ' Player Sprint Usage Upgrades'
+  itemName: Sprint Usage Upgrades
   description: 
   itemType: 3
   emojiIcon: 11

@@ -1,9 +1,5 @@
-﻿using BepInEx;
-using BepInEx.Configuration;
-using HarmonyLib;
-using System.Linq;
+﻿using System.Linq;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 using VanillaUpgrades.Classes;
 
 namespace ItemBundles
@@ -36,9 +32,15 @@ namespace ItemBundles
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void UpgradeViaBundle(ItemToggle itemToggle)
+        public static void CallBundleUpgrade(ItemToggle itemToggle)
         {
             var itemAssetName = BundleHelper.GetItemStringFromBundle( itemToggle.gameObject.GetComponent<ItemAttributes>().item.itemAssetName );
+            CallBundleUpgrade( itemAssetName );
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static void CallBundleUpgrade( string itemAssetName )
+        {
             var pluginInstance = VanillaUpgrades.Plugin.instance;
 
             UpgradeItem upgradeItem = pluginInstance.upgradeItems.FirstOrDefault((UpgradeItem x) => x.name == itemAssetName);

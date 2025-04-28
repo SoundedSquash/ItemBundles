@@ -6238,7 +6238,7 @@ GameObject:
   - component: {fileID: 169387491350284299}
   - component: {fileID: 114167020103451813}
   - component: {fileID: 114449748648032208}
-  - component: {fileID: 4066510371344210544}
+  - component: {fileID: 7557236022238633471}
   m_Layer: 0
   m_Name: Item Upgrade Player Extra Jump Bundle
   m_TagString: Untagged
@@ -6324,8 +6324,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 4066510371344210544}
-        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradePlayerExtraJumpBundle, ItemBundles
+      - m_Target: {fileID: 7557236022238633471}
+        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -6722,7 +6722,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &4066510371344210544
+--- !u!114 &7557236022238633471
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -6731,9 +6731,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1631011049526965}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: -163816276, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: 1380761461, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalItem: {fileID: 11400000, guid: d96164aab8a855c4b84e9dc8e97f1273, type: 2}
 --- !u!1 &1676077986691454
 GameObject:
   m_ObjectHideFlags: 0

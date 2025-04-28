@@ -3659,7 +3659,7 @@ GameObject:
   - component: {fileID: 169370865798435530}
   - component: {fileID: 114163337447847169}
   - component: {fileID: 114490992181241681}
-  - component: {fileID: 3612420695833181942}
+  - component: {fileID: 4252152338029150805}
   m_Layer: 0
   m_Name: Item Upgrade Player Sprint Speed Bundle
   m_TagString: Untagged
@@ -3745,9 +3745,8 @@ MonoBehaviour:
   upgradeEvent:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3612420695833181942}
-        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradePlayerSprintSpeedBundle,
-          ItemBundles
+      - m_Target: {fileID: 4252152338029150805}
+        m_TargetAssemblyTypeName: ItemBundles.ItemUpgradeBundle, ItemBundles
         m_MethodName: Upgrade
         m_Mode: 1
         m_Arguments:
@@ -4144,7 +4143,7 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
---- !u!114 &3612420695833181942
+--- !u!114 &4252152338029150805
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4153,9 +4152,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1445339928308599}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 559132771, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
+  m_Script: {fileID: 1380761461, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  originalItem: {fileID: 11400000, guid: 24944db323e1480459938be18ae3fb77, type: 2}
 --- !u!1 &1463863683028563
 GameObject:
   m_ObjectHideFlags: 0
