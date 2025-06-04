@@ -336,9 +336,14 @@ namespace ItemBundles
                 //TODO Add minimum number
                 if (ItemBundles.Instance.itemBundleInfos.ContainsKey(item.itemAssetName))
                 {
-                    DebugLogger.LogInfo($"-{num}- Found {item.itemAssetName} entry", true);
                     var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfos[item.itemType];
                     var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.itemAssetName];
+
+                    if ( itemBundleInfo.bundleItem.prefab == null )
+                    {
+                        DebugLogger.LogInfo($"{itemBundleInfo.bundleItem} prefab was null! Skipping entry", true);
+                        continue;
+                    }
 
                     float bundleFinalChance = BundleHelper.GetItemBundleChance(item);
                     bundleFinalChance /= 100f;

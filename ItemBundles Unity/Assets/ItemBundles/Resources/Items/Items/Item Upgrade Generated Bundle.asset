@@ -1,0 +1,31 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c30496d6ae6d6f907456e10a94e01ec6, type: 3}
+  m_Name: Item Upgrade Generated Bundle
+  m_EditorClassIdentifier: 
+  disabled: 0
+  itemAssetName: Item Upgrade Generated Bundle
+  itemName: Upgrades
+  description: 
+  itemType: 3
+  emojiIcon: 11
+  itemVolume: 6
+  itemSecretShopType: 0
+  colorPreset: {fileID: 11400000, guid: 0d9a3e51e7f7904499722ff95b5f00b3, type: 2}
+  prefab: {fileID: 1310192160991527, guid: c7fded7b1dfc2c845884a867379813d1, type: 3}
+  value: {fileID: 11400000, guid: c821c96708bba394bb1fccfc21ae8a45, type: 2}
+  maxAmount: 1
+  maxAmountInShop: 1
+  maxPurchase: 1
+  maxPurchaseAmount: 1
+  spawnRotationOffset: {x: 0, y: 0, z: 0, w: 1}
+  physicalItem: 1

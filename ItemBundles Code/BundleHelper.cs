@@ -28,7 +28,7 @@ namespace ItemBundles
 
         public static int GetItemBundleMinItem(Item item)
         {
-            var output = ItemBundles.Instance.config_minConsumablePerBundle.Value;
+            var output = ItemBundles.Instance.config_minPerBundle.Value;
             if (ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value >= 0)
             {
                 output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value;
@@ -43,7 +43,7 @@ namespace ItemBundles
 
         public static int GetItemBundleMinItem(string itemString, SemiFunc.itemType itemType)
         {
-            var output = ItemBundles.Instance.config_minConsumablePerBundle.Value;
+            var output = ItemBundles.Instance.config_minPerBundle.Value;
             if (ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value >= 0)
             {
                 output = ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value;
