@@ -6,6 +6,7 @@ using Photon.Pun;
 using Steamworks.Ugc;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -37,6 +38,8 @@ namespace ItemBundles
         public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
         public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
         public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
+
+        public bool mainMenuReached { get; set; }
 
         public class BundleShopInfo
         {
@@ -149,12 +152,18 @@ namespace ItemBundles
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
+
+                if (upgradeItem == null) return;
+                if (generatedBundles.Keys.Contains<Item>(upgradeItem)) return;
+
+                DebugLogger.LogInfo($"Trying generated bundle: {upgradeItem.itemName}", true);
+                DebugLogger.LogWarning($"Will generate NREs on initial generation, ignore them.", true);
                 var upgradePrefab = upgradeItem.prefab;
 
                 // Duplicate template item and prefab
                 // var newBundleItem = ScriptableObject.Instantiate(tempBundleItem);
                 var newBundleItem = ScriptableObject.CreateInstance<Item>();
-                var newBundlePrefab = GameObject.Instantiate(tempBundleItem.prefab);
+                var newBundlePrefab = GameObject.Instantiate(tempBundleItem.prefab, new Vector3(0,100,0), Quaternion.identity);
 
                 // Assign necessary values onto new item
                 newBundlePrefab.name = upgradeItem.name + " Bundle";
@@ -370,7 +379,11 @@ namespace ItemBundles
 
         private void Update()
         {
-            // Code that runs every frame goes here
+            // Hacky code to bypass missing reference of RunManager.instance.levelSplashScreen or SemiFunc.SplashScreenLevel()
+            // Necessary to initialize dynamically generated bundles
+            if ( mainMenuReached || RunManager.instance == null ) return;
+
+            mainMenuReached = SemiFunc.IsMainMenu();
         }
     }
 }

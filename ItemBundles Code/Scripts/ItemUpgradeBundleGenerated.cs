@@ -16,7 +16,7 @@ namespace ItemBundles
 
         //What item should we spawn?
         public Item originalItem;
-        private bool used;
+        public bool isPrefab;
 
         private void Awake()
         {
@@ -32,6 +32,7 @@ namespace ItemBundles
                 this.transform.parent = BundleManager.instance.transform;
                 var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = true;
+                isPrefab = true;
             }
             else
             {
@@ -43,7 +44,7 @@ namespace ItemBundles
         }
 
         private void Start()
-        {           
+        {
             // This specifically prevents the intiial prefab from being deleted or falling through the scene
             if ( IsPrefabStage() )
             {
@@ -61,6 +62,12 @@ namespace ItemBundles
             FixLight();
         }
 
+        public static bool IsPrefabStage()
+        {
+            if (!ItemBundles.Instance.mainMenuReached || SemiFunc.MenuLevel()) return true;
+            else return RunManager.instance == null;
+        }
+
         IEnumerator LateStart(float waitTime)
         {
             DebugLogger.LogWarning("========= GENERATED BUNDLE: LateStart start", true);
@@ -75,48 +82,27 @@ namespace ItemBundles
 
         public void SpawnItems()
         {
-            //TODO: Add velocity to items
-            //TODO: Adjust item spacing dyanmically
             var playerCount = SemiFunc.PlayerGetAll().Count;
             playerCount = Mathf.Max(playerCount, BundleHelper.GetItemBundleMinItem(originalItem));
 
-            float offsetMult = 0.5f;
-            float velMult = 25f;
-
             for (int i = 0; i < (playerCount + ItemBundles.Instance.config_debugFakePlayers.Value); i++)
             {
-                //Makes first item spawn in hand
-                var randomSpawnOffset = Vector3.zero;
-                if (i != 0)
-                {
-                    randomSpawnOffset = Random.insideUnitSphere * offsetMult;
-                }
+                var boxThicknessOffset = 0.075f;
+                var spawnOffset = -transform.forward * boxThicknessOffset * (i - 1);
 
-                // SP, direct instantiate
                 if ( !SemiFunc.IsMultiplayer() )
                 {
-                    var obj = Object.Instantiate(originalItem.prefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
-                    obj.AddComponent<ItemLateImpulse>();
+                    var obj = Object.Instantiate(originalItem.prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
                 }
-                // MP, server host network instantiate
                 if ( SemiFunc.IsMasterClient() )
                 {
-                    GameObject obj = PhotonNetwork.Instantiate("Items/" + originalItem.prefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
-                    obj.AddComponent<ItemLateImpulse>();
+                    GameObject obj = PhotonNetwork.Instantiate("Items/" + originalItem.prefab.name, base.transform.position + spawnOffset, gameObject.transform.rotation);
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
                 }
             }
-
-            //particleScriptExplosion.Spawn(base.transform.position, 0.8f, 50, 100, 4f, onlyParticleEffect: false, disableSound: true);
-            //soundExplosion.Play(base.transform.position);
-            //soundExplosionGlobal.Play(base.transform.position);
         }
 
-        public bool IsPrefabStage()
-        {
-            return (RunManager.instance == null || RunManager.instance.levelCurrent == RunManager.instance.levelMainMenu || RunManager.instance.levelCurrent == RunManager.instance.levelLobbyMenu);
-        }
 
         /// <summary>
         /// Get a material from a renderer component so we can read and copy it's info

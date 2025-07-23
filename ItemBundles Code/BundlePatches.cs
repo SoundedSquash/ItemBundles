@@ -49,6 +49,25 @@ namespace ItemBundles
     [HarmonyPatch(typeof(ItemAttributes))]
     internal static class BundlePatch_ItemAttributes
     {
+        /// <summary>
+        /// Patch that prevents generated 'prefabs' from spamming NRE errors in the console
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <returns></returns>
+        [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.ShopInTruckLogic))]
+        private static bool ShopInTruckLogic_Prefix(ItemAttributes __instance)
+        {
+            var bundleComp = __instance.GetComponent<ItemUpgradeBundleGenerated>();
+            if (bundleComp != null)
+            {
+                return !bundleComp.isPrefab;
+            }
+            else
+            {
+                return true;
+            }
+        }
+
         [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.GetValue))]
         private static void GetValue_Prefix( ItemAttributes __instance)
         {
