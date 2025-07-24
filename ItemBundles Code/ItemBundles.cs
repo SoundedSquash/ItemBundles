@@ -1,17 +1,10 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using MoreUpgrades.Classes;
-using Photon.Pun;
-using REPOLib.Modules;
-using Steamworks.Ugc;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.UIElements;
-using VanillaUpgrades.Classes;
 
 namespace ItemBundles
 {
@@ -38,8 +31,9 @@ namespace ItemBundles
         public ConfigEntry<int> config_debugFakePlayers { get; private set; }
         public ConfigEntry<bool> config_debugLogging { get; private set; }
 
-        public List<Item> allVanillaUpgrades = new List<Item>();
-        public List<Item> allSupportedUpgrades = new List<Item>();
+        public List<Item> allUpgradesVanilla = new List<Item>();
+        public List<Item> allUpgradesRepoLib = new List<Item>();
+        public List<Item> allUpgrades = new List<Item>();
         public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
         public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
         public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
@@ -148,21 +142,30 @@ namespace ItemBundles
             }
 
             // Generate Updgrade Bundles
-            allVanillaUpgrades.Clear();
-            allVanillaUpgrades = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player")).ToList();
+            allUpgradesVanilla.Clear();
+            allUpgrades.Clear();
 
-            allSupportedUpgrades.Clear();
-            allSupportedUpgrades = new List<Item>(allVanillaUpgrades);
+            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player")).ToList();
+            allUpgrades = new List<Item>(allUpgradesVanilla);
 
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
                 if (upgradeItem == null) return;
 
-                allSupportedUpgrades.Add(upgradeItem);
+                allUpgradesRepoLib.Add(upgradeItem);
+                allUpgrades.Add(upgradeItem);
             }
 
-            foreach (Item upgradeItem in allSupportedUpgrades)
+            if ( MoreUpgradesCompat.enabled )
+            {
+                foreach( Item upgradeItem in MoreUpgradesCompat.allUpgrades )
+                {
+                    allUpgrades.Add(upgradeItem);
+                }
+            }
+
+            foreach (Item upgradeItem in allUpgrades)
             {
                 // Plan to have for having predetermined or otherwise unique prefabs
                 // Currently unsure how to check assetpath within assetbundle
@@ -256,19 +259,19 @@ namespace ItemBundles
             foreach ( Item item in generatedBundles.Keys )
             {
                 //TODO: See if possible to determine mod/origin for better sorting
+                // AFAIK not currently possible to determine origin mod for REPOLib upgrades
                 var configPrefix = "";
                 var bundleComp = item.prefab.GetComponent<ItemUpgradeBundleGenerated>();
-                if (!allVanillaUpgrades.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
+                if (!allUpgradesVanilla.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
+                if ( MoreUpgradesCompat.enabled )
+                {
+                    if (MoreUpgradesCompat.allUpgrades.Contains(bundleComp.originalItem))
+                    {
+                        configPrefix = "MoreUpgrades ";
+                    }
+                }
 
                 InitializeBundle(item, configPrefix);
-            }
-
-            if ( MoreUpgradesCompat.enabled )
-            {
-                InitializeBundle("Modded Item Upgrade Player Map Enemy Tracker Bundle", "MoreUpgrades ");
-                InitializeBundle("Modded Item Upgrade Player Map Player Tracker Bundle", "MoreUpgrades ");
-                InitializeBundle("Modded Item Upgrade Player Sprint Usage Bundle", "MoreUpgrades ");
-                InitializeBundle("Modded Item Upgrade Player Valuable Count Bundle", "MoreUpgrades ");
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace ItemBundles
 {
@@ -110,6 +111,20 @@ namespace ItemBundles
             return playerList;
         }
 
+        public static bool IsObjectBundlePrefab(GameObject obj)
+        {
+            var bundleComp = obj.GetComponent<ItemUpgradeBundleGenerated>();
+            if (bundleComp)
+            {
+                return bundleComp.isPrefab;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        /* Deprecated, to be purged at a later date
         public static void CallBundleUpgrade( string upgradeName )
         {
             var players = SemiFunc.PlayerGetAll();
@@ -151,5 +166,6 @@ namespace ItemBundles
                 }
             }
         }
+        */
     }
 }

@@ -1,4 +1,5 @@
 ﻿using MoreUpgrades.Classes;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 
@@ -20,10 +21,21 @@ namespace ItemBundles
             }
         }
 
+        public static List<Item> allUpgrades = new List<Item>();
+
         public static void InitCompat()
         {
             var pluginInstance = MoreUpgrades.Plugin.instance;
 
+            allUpgrades.Clear();
+
+            foreach (UpgradeItem upgradeItem in pluginInstance.upgradeItems)
+            {
+                var item = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItem.name);
+                allUpgrades.Add(item);
+            }
+
+            /* Deprecated, replaced with dynamic generation method, to be purged later
             foreach (UpgradeItem item in pluginInstance.upgradeItems)
             {
                 var newItem = ItemBundles.Instance.assetBundle.LoadAsset<Item>(item.fullName + " Bundle");
@@ -41,6 +53,7 @@ namespace ItemBundles
                     DebugLogger.LogError($"-- MoreUpgradesCompat did not find bundle item", true);
                 }
             }
+            */
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]

@@ -56,6 +56,63 @@ namespace ItemBundles
     internal static class BundlePatch_ItemAttributes
     {
         /// <summary>
+        /// Adds an additional check to name display to prevent adding Interact text to bundles while in the shop
+        /// TODO: Finish this to prevent NREs
+        /// </summary>
+        /// <param name="instructions"></param>
+        /// <returns></returns>
+        [HarmonyTranspiler, HarmonyPatch(nameof(ItemAttributes.Start))]
+        static IEnumerable<CodeInstruction> Start_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
+        {
+            var codeMatcher = new CodeMatcher(instructions, generator);
+
+            //
+            // Expected Behavior: Add branch to Start() Line 44
+            // this.GetValue()
+            // to
+            // if ( !ItemUpgradeBundleGenerated.IsObjectBundlePrefab(this.gameObject) )
+            // {
+            //      this.GetValue()
+            // }
+            
+            // Expect IL_0165
+            codeMatcher.MatchForward(true, (CodeMatch[])(object)new CodeMatch[4]
+            {
+                new CodeMatch((OpCode?)OpCodes.Ldsfld),
+                new CodeMatch((OpCode?)OpCodes.Ldfld),
+                new CodeMatch((OpCode?)OpCodes.Callvirt),
+                new CodeMatch((OpCode?)OpCodes.Callvirt)
+            })
+            .ThrowIfInvalid("ShowingInfo(): Couldn't find matching code");
+
+            // Expect IL_0170
+            codeMatcher.Advance(3);
+
+            // TODO: Get IL_0170 label for later
+
+            // Expect IL_0165
+            codeMatcher.Advance(-3);
+
+            /*
+            codeMatcher.Insert((CodeInstruction[])(object)new CodeInstruction[4]
+            {
+                // store "this" to stack
+			    new CodeInstruction(OpCodes.Ldarg_0),
+                // consume stack obj 0, store current stack's gameObject field to 
+                new CodeInstruction(OpCodes.Ldfld, (object)AccessTools.Field(typeof(ItemAttributes), "itemAssetName")),stack
+                // call ItemUpgradeBundleGenerated.IsObjectBundlePrefab(), consuming stack as input
+                new CodeInstruction(OpCodes.Call, (object)AccessTools.Method(typeof(ItemUpgradeBundleGenerated), nameof(ItemUpgradeBundleGenerated.IsObjectBundlePrefab))),
+                // if true, skip to IL_0170 label
+			    new CodeInstruction(OpCodes.Brtrue, exitOperand)
+            });
+
+            DebugLogger.LogInfo("--- ItemAttributes.Start(): ADDING NEW INSTRUCTIONS", true);
+            */
+
+            return codeMatcher.InstructionEnumeration();
+        }
+
+        /// <summary>
         /// Patch that prevents generated 'prefabs' from spamming NRE errors in the console
         /// </summary>
         /// <param name="__instance"></param>
@@ -63,19 +120,11 @@ namespace ItemBundles
         [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.ShopInTruckLogic))]
         private static bool ShopInTruckLogic_Prefix(ItemAttributes __instance)
         {
-            var bundleComp = __instance.GetComponent<ItemUpgradeBundleGenerated>();
-            if (bundleComp != null)
-            {
-                return !bundleComp.isPrefab;
-            }
-            else
-            {
-                return true;
-            }
+            return !BundleHelper.IsObjectBundlePrefab(__instance.gameObject);
         }
 
         [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.GetValue))]
-        private static void GetValue_Prefix( ItemAttributes __instance)
+        private static void GetValue_Prefix(ItemAttributes __instance)
         {
         }
 
@@ -85,7 +134,7 @@ namespace ItemBundles
         /// </summary>
         /// <param name="__instance"></param>
         [HarmonyPostfix, HarmonyPatch(nameof(ItemAttributes.GetValue))]
-        [HarmonyPriority (Priority.Last)]
+        [HarmonyPriority(Priority.Last)]
         private static void GetValue_Postfix(ItemAttributes __instance)
         {
             if (!GameManager.Multiplayer() || PhotonNetwork.IsMasterClient)
@@ -107,13 +156,13 @@ namespace ItemBundles
                         var upgradeIncreaseMult = ShopManager.instance.upgradeValueIncrease;
 
                         // Try to get configs for MoreUpgrade item bundles
-                        if ( bundleAssetName.Contains("Modded") && MoreUpgradesCompat.enabled )
+                        if (bundleAssetName.Contains("Modded") && MoreUpgradesCompat.enabled)
                         {
                             mult = MoreUpgradesCompat.GetItemValueMultiplier(mult, bundleAssetName);
                             upgradeIncreaseMult = MoreUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
                         }
                         // Try to get config for VanillaUpgrades
-                        else if ( VanillaUpgradesCompat.enabled )
+                        else if (VanillaUpgradesCompat.enabled)
                         {
                             upgradeIncreaseMult = VanillaUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
                         }
@@ -123,14 +172,14 @@ namespace ItemBundles
                         num = Mathf.CeilToInt(num / 1000f);
 
                         DebugLogger.LogInfo($"base {num}, upgradeIncreaseMult {upgradeIncreaseMult}, num items {(float)StatsManager.instance.GetItemsUpgradesPurchased(BundleHelper.GetItemStringFromBundle(__instance.itemAssetName))}", true);
-                        num += num * upgradeIncreaseMult * (float)StatsManager.instance.GetItemsUpgradesPurchased( BundleHelper.GetItemStringFromBundle(__instance.itemAssetName) );
+                        num += num * upgradeIncreaseMult * (float)StatsManager.instance.GetItemsUpgradesPurchased(BundleHelper.GetItemStringFromBundle(__instance.itemAssetName));
                         currentValue = (int)num;
                     }
 
                     // Adjust consumable bundle price by minimum value if higher than player count
-                    if ( __instance.itemType == itemType.grenade || __instance.itemType == itemType.mine )
+                    if (__instance.itemType == itemType.grenade || __instance.itemType == itemType.mine)
                     {
-                        playerCount = Mathf.Max( playerCount, BundleHelper.GetItemBundleMinItem( BundleHelper.GetItemStringFromBundle(__instance.item), __instance.itemType ) );
+                        playerCount = Mathf.Max(playerCount, BundleHelper.GetItemBundleMinItem(BundleHelper.GetItemStringFromBundle(__instance.item), __instance.itemType));
                     }
 
                     // If more than one player, apply player multiplier + percentage adjust
@@ -142,7 +191,7 @@ namespace ItemBundles
                     }
 
                     __instance.value = currentValue;
-                    if ( GameManager.Multiplayer() )
+                    if (GameManager.Multiplayer())
                     {
                         __instance.photonView.RPC("GetValueRPC", RpcTarget.Others, __instance.value);
                     }
@@ -213,7 +262,7 @@ namespace ItemBundles
             {
                 var numText = "";
                 var playerCount = SemiFunc.PlayerGetAll().Count + ItemBundles.Instance.config_debugFakePlayers.Value;
-                if ( __instance.itemType == itemType.healthPack )
+                if (__instance.itemType == itemType.healthPack)
                 {
                     var heal = __instance.GetComponent<ItemHealthPackBundle>().healAmount;
                     numText = (BundleHelper.PlayerGetAllAlive().Count * heal).ToString() + "hp";
@@ -222,7 +271,7 @@ namespace ItemBundles
                 {
                     numText = Mathf.Max(playerCount, BundleHelper.GetItemBundleMinItem(BundleHelper.GetItemStringFromBundle(__instance.item), __instance.itemType)).ToString();
                 }
-                else if ( __instance.itemType == itemType.item_upgrade )
+                else if (__instance.itemType == itemType.item_upgrade)
                 {
                     numText = playerCount.ToString();
                 }
@@ -334,7 +383,7 @@ namespace ItemBundles
             AttemptBundlesFromList(ref __instance.potentialItemHealthPacks);
         }
 
-        private static void AttemptBundlesFromList( ref List<Item> itemList)
+        private static void AttemptBundlesFromList(ref List<Item> itemList)
         {
             var tempList = new List<Item>(itemList);
             for (int num = tempList.Count - 1; num >= 0; num--)
@@ -348,7 +397,7 @@ namespace ItemBundles
                     var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfos[item.itemType];
                     var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.itemAssetName];
 
-                    if ( itemBundleInfo.bundleItem.prefab == null )
+                    if (itemBundleInfo.bundleItem.prefab == null)
                     {
                         DebugLogger.LogInfo($"{itemBundleInfo.bundleItem} prefab was null! Skipping entry", true);
                         continue;
@@ -391,6 +440,36 @@ namespace ItemBundles
 
             tempList.Shuffle();
             itemList = tempList;
+        }
+    }
+
+    [HarmonyPatch(typeof(PhysGrabObject))]
+    internal static class BundlePatch_PhysGrabObject
+    {
+        /// <summary>
+        /// Patch that prevents generated 'prefabs' from causing NREs on startup
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <returns></returns>
+        [HarmonyPrefix, HarmonyPatch(nameof(PhysGrabObject.OnEnable))]
+        private static bool OnEnable_Prefix(PhysGrabObject __instance)
+        {
+            return !ItemUpgradeBundleGenerated.IsPrefabStage();
+        }
+    }
+
+    [HarmonyPatch(typeof(RoomVolumeCheck))]
+    internal static class BundlePatch_RoomVolumeCheck
+    {
+        /// <summary>
+        /// Patch that prevents generated 'prefabs' from causing NREs on startup
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <returns></returns>
+        [HarmonyPrefix, HarmonyPatch(nameof(RoomVolumeCheck.CheckStart))]
+        private static bool CheckStart_Prefix(RoomVolumeCheck __instance)
+        {
+            return !ItemUpgradeBundleGenerated.IsPrefabStage();
         }
     }
 }
