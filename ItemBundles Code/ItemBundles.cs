@@ -3,12 +3,15 @@ using BepInEx.Configuration;
 using HarmonyLib;
 using MoreUpgrades.Classes;
 using Photon.Pun;
+using REPOLib.Modules;
 using Steamworks.Ugc;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
+using VanillaUpgrades.Classes;
 
 namespace ItemBundles
 {
@@ -35,11 +38,14 @@ namespace ItemBundles
         public ConfigEntry<int> config_debugFakePlayers { get; private set; }
         public ConfigEntry<bool> config_debugLogging { get; private set; }
 
+        public List<Item> allVanillaUpgrades = new List<Item>();
+        public List<Item> allSupportedUpgrades = new List<Item>();
         public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
         public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
         public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
 
         public bool mainMenuReached { get; set; }
+        public GameObject templateUpgradeBundlePrefab { get; set; }
 
         public class BundleShopInfo
         {
@@ -58,7 +64,6 @@ namespace ItemBundles
 
         private void Awake()
         {
-            // Should not have more than one instance
             if (Instance) return;
 
             Instance = this;
@@ -68,7 +73,6 @@ namespace ItemBundles
             string assetBundleFilePath = Path.Combine(pluginFolderPath, "itembundles");
             assetBundle = AssetBundle.LoadFromFile(assetBundleFilePath);
 
-            // Prevent the plugin from being deleted
             this.gameObject.transform.parent = null;
             this.gameObject.hideFlags = HideFlags.HideAndDontSave;
 
@@ -108,92 +112,113 @@ namespace ItemBundles
                 return;
             }
 
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Map Player Count Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Energy Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Extra Jump Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Grab Range Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Grab Strength Bundle");
-            //RegisterBundleItem(assetBundle, "Item Upgrade Player Grab Throw Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Health Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Sprint Speed Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Upgrade Player Tumble Launch Bundle");
 
-            RegisterBundleItemRepoLib(assetBundle, "Item Health Pack Small Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Health Pack Medium Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Health Pack Large Bundle");
+            // Replaced with Dynamic Generation method, to be purged later
+            //RegisterBundleItemRepoLib("Item Upgrade Map Player Count Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Energy Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Extra Jump Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Range Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Strength Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Throw Bundle"); //Exists in game files, but not fully implemented
+            //RegisterBundleItemRepoLib("Item Upgrade Player Health Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Sprint Speed Bundle");
+            //RegisterBundleItemRepoLib("Item Upgrade Player Tumble Launch Bundle");
 
-            RegisterBundleItemRepoLib(assetBundle, "Item Grenade Explosive Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Grenade Shockwave Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Grenade Stun Bundle");
+            RegisterBundleItemRepoLib("Item Health Pack Small Bundle");
+            RegisterBundleItemRepoLib("Item Health Pack Medium Bundle");
+            RegisterBundleItemRepoLib("Item Health Pack Large Bundle");
 
-            RegisterBundleItemRepoLib(assetBundle, "Item Mine Explosive Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Mine Shockwave Bundle");
-            RegisterBundleItemRepoLib(assetBundle, "Item Mine Stun Bundle");
+            RegisterBundleItemRepoLib("Item Grenade Explosive Bundle");
+            RegisterBundleItemRepoLib("Item Grenade Shockwave Bundle");
+            RegisterBundleItemRepoLib("Item Grenade Stun Bundle");
+
+            RegisterBundleItemRepoLib("Item Mine Explosive Bundle");
+            RegisterBundleItemRepoLib("Item Mine Shockwave Bundle");
+            RegisterBundleItemRepoLib("Item Mine Stun Bundle");
 
 
-            var tempBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Generated Bundle");
-            var tempBundlePrefab = tempBundleItem.prefab;
+            var tempBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Bundle Template");
+            templateUpgradeBundlePrefab = tempBundleItem.prefab;
 
-            if (tempBundleItem == null )
+            if (tempBundleItem == null || templateUpgradeBundlePrefab == null)
             {
-                DebugLogger.LogError($"tempBundleItem was null! Unable to generate custom upgrade bundles");
+                DebugLogger.LogError($"tempBundle item or prefab was null! Unable to generate custom upgrade bundles");
                 DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
 
-            if (tempBundlePrefab == null)
-            {
-                DebugLogger.LogError($"tempBundlePrefab was null! Unable to generate custom upgrade bundles");
-                DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
-                return;
-            }
+            // Generate Updgrade Bundles
+            allVanillaUpgrades.Clear();
+            allVanillaUpgrades = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player")).ToList();
 
-            // Generated Bundles
+            allSupportedUpgrades.Clear();
+            allSupportedUpgrades = new List<Item>(allVanillaUpgrades);
+
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
-
                 if (upgradeItem == null) return;
-                if (generatedBundles.Keys.Contains<Item>(upgradeItem)) return;
 
-                DebugLogger.LogInfo($"Trying generated bundle: {upgradeItem.itemName}", true);
-                DebugLogger.LogWarning($"Will generate NREs on initial generation, ignore them.", true);
-                var upgradePrefab = upgradeItem.prefab;
-
-                // Duplicate template item and prefab
-                // var newBundleItem = ScriptableObject.Instantiate(tempBundleItem);
-                var newBundleItem = ScriptableObject.CreateInstance<Item>();
-                var newBundlePrefab = GameObject.Instantiate(tempBundleItem.prefab, new Vector3(0,100,0), Quaternion.identity);
-
-                // Assign necessary values onto new item
-                newBundlePrefab.name = upgradeItem.name + " Bundle";
-                newBundleItem.name = upgradeItem.name + " Bundle";
-                newBundleItem.itemAssetName = upgradeItem.itemAssetName + " Bundle";
-                newBundleItem.itemName = upgradeItem.itemName + "s";
-                newBundleItem.itemType = upgradeItem.itemType;
-                newBundleItem.emojiIcon = upgradeItem.emojiIcon;
-                newBundleItem.itemVolume = upgradeItem.itemVolume;
-                newBundleItem.itemSecretShopType = upgradeItem.itemSecretShopType;
-                newBundleItem.colorPreset = upgradeItem.colorPreset;
-                newBundleItem.prefab = newBundlePrefab;
-                newBundleItem.value = upgradeItem.value;
-                newBundleItem.maxAmount = upgradeItem.maxAmount;
-                newBundleItem.maxAmountInShop = upgradeItem.maxAmountInShop;
-                newBundleItem.maxPurchase = upgradeItem.maxPurchase;
-                newBundleItem.maxPurchaseAmount = upgradeItem.maxPurchaseAmount;
-                newBundleItem.spawnRotationOffset = upgradeItem.spawnRotationOffset;
-                newBundleItem.physicalItem = upgradeItem.physicalItem;
-
-                var itemComp = newBundlePrefab.GetComponent<ItemAttributes>();
-                itemComp.item = newBundleItem;
-
-                var bundleComp = newBundlePrefab.GetComponent<ItemUpgradeBundleGenerated>();
-                bundleComp.originalItem = upgradeItem;
-
-                // Register Item
-                REPOLib.Modules.Items.RegisterItem(newBundleItem);
-                generatedBundles[newBundleItem] = newBundlePrefab;
+                allSupportedUpgrades.Add(upgradeItem);
             }
+
+            foreach (Item upgradeItem in allSupportedUpgrades)
+            {
+                // Plan to have for having predetermined or otherwise unique prefabs
+                // Currently unsure how to check assetpath within assetbundle
+                // if ( ValidateExistingBundle(upgrade) ) continue;
+
+                GenerateUpgradeBundle(upgradeItem);
+            }
+        }
+
+        public bool ValidateExistingBundle(Item upgradeItem)
+        {
+            //var assetPath = "Assets/ItemBundles/Resources/Unused/Items/Items/";
+            Item bundleItem = assetBundle.LoadAsset<Item>(upgradeItem.itemAssetName + " Bundle.asset");
+            if (bundleItem == null) return false;
+            if (bundleItem.prefab == null) return false;
+
+            REPOLib.Modules.Items.RegisterItem(bundleItem);
+            return true;
+        }
+
+        public void GenerateUpgradeBundle( Item baseItem )
+        {
+            DebugLogger.LogInfo($"Trying generated bundle: {baseItem.name}", true);
+            DebugLogger.LogWarning($"Will generate NREs on initial generation, ignore them.", true);
+
+            var newBundleItem = ScriptableObject.CreateInstance<Item>();
+            var newBundlePrefab = GameObject.Instantiate(templateUpgradeBundlePrefab, new Vector3(0, 100, 0), Quaternion.identity);
+
+            newBundlePrefab.name = baseItem.name + " Bundle";
+            newBundleItem.name = baseItem.name + " Bundle";
+            newBundleItem.itemAssetName = baseItem.itemAssetName + " Bundle";
+            newBundleItem.itemName = baseItem.itemName + "s";
+            newBundleItem.itemType = baseItem.itemType;
+            newBundleItem.emojiIcon = baseItem.emojiIcon;
+            newBundleItem.itemVolume = baseItem.itemVolume;
+            newBundleItem.itemSecretShopType = baseItem.itemSecretShopType;
+            newBundleItem.colorPreset = baseItem.colorPreset;
+            newBundleItem.prefab = newBundlePrefab;
+            newBundleItem.value = baseItem.value;
+            newBundleItem.maxAmount = baseItem.maxAmount;
+            newBundleItem.maxAmountInShop = baseItem.maxAmountInShop;
+            newBundleItem.maxPurchase = baseItem.maxPurchase;
+            newBundleItem.maxPurchaseAmount = baseItem.maxPurchaseAmount;
+            newBundleItem.spawnRotationOffset = baseItem.spawnRotationOffset;
+            newBundleItem.physicalItem = baseItem.physicalItem;
+
+            var itemComp = newBundlePrefab.GetComponent<ItemAttributes>();
+            itemComp.item = newBundleItem;
+
+            var bundleComp = newBundlePrefab.GetComponent<ItemUpgradeBundleGenerated>();
+            bundleComp.originalItem = baseItem;
+
+            //TODO: make mesh randomly choose from pool of meshes so they aren't all the same
+
+            REPOLib.Modules.Items.RegisterItem(newBundleItem);
+            generatedBundles[newBundleItem] = newBundlePrefab;
         }
 
         public void InitializeItemBundles()
@@ -205,39 +230,45 @@ namespace ItemBundles
                 return;
             }
 
-            InitializeBundle(assetBundle, "Item Upgrade Map Player Count Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Energy Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Extra Jump Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Grab Range Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Grab Strength Bundle");
-            //RegisterBundleItem(assetBundle, "Item Upgrade Player Grab Throw Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Health Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Sprint Speed Bundle");
-            InitializeBundle(assetBundle, "Item Upgrade Player Tumble Launch Bundle");
+            // Replaced with Dynamic Generation method, to be purged later
+            //InitializeBundle("Item Upgrade Map Player Count Bundle");
+            //InitializeBundle("Item Upgrade Player Energy Bundle");
+            //InitializeBundle("Item Upgrade Player Extra Jump Bundle");
+            //InitializeBundle("Item Upgrade Player Grab Range Bundle");
+            //InitializeBundle("Item Upgrade Player Grab Strength Bundle");
+            //InitializeBundle("Item Upgrade Player Grab Throw Bundle"); //Exists in game files, but not fully implemented
+            //InitializeBundle("Item Upgrade Player Health Bundle");
+            //InitializeBundle("Item Upgrade Player Sprint Speed Bundle");
+            //InitializeBundle("Item Upgrade Player Tumble Launch Bundle");
 
-            InitializeBundle(assetBundle, "Item Health Pack Small Bundle");
-            InitializeBundle(assetBundle, "Item Health Pack Medium Bundle");
-            InitializeBundle(assetBundle, "Item Health Pack Large Bundle");
+            InitializeBundle("Item Health Pack Small Bundle");
+            InitializeBundle("Item Health Pack Medium Bundle");
+            InitializeBundle("Item Health Pack Large Bundle");
 
-            InitializeBundle(assetBundle, "Item Grenade Explosive Bundle");
-            InitializeBundle(assetBundle, "Item Grenade Shockwave Bundle");
-            InitializeBundle(assetBundle, "Item Grenade Stun Bundle");
+            InitializeBundle("Item Grenade Explosive Bundle");
+            InitializeBundle("Item Grenade Shockwave Bundle");
+            InitializeBundle("Item Grenade Stun Bundle");
 
-            InitializeBundle(assetBundle, "Item Mine Explosive Bundle");
-            InitializeBundle(assetBundle, "Item Mine Shockwave Bundle");
-            InitializeBundle(assetBundle, "Item Mine Stun Bundle");
+            InitializeBundle("Item Mine Explosive Bundle");
+            InitializeBundle("Item Mine Shockwave Bundle");
+            InitializeBundle("Item Mine Stun Bundle");
 
             foreach ( Item item in generatedBundles.Keys )
             {
-                InitializeBundle(item, "Generated ");
+                //TODO: See if possible to determine mod/origin for better sorting
+                var configPrefix = "";
+                var bundleComp = item.prefab.GetComponent<ItemUpgradeBundleGenerated>();
+                if (!allVanillaUpgrades.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
+
+                InitializeBundle(item, configPrefix);
             }
 
             if ( MoreUpgradesCompat.enabled )
             {
-                InitializeBundle(assetBundle, "Modded Item Upgrade Player Map Enemy Tracker Bundle", "MoreUpgrades ");
-                InitializeBundle(assetBundle, "Modded Item Upgrade Player Map Player Tracker Bundle", "MoreUpgrades ");
-                InitializeBundle(assetBundle, "Modded Item Upgrade Player Sprint Usage Bundle", "MoreUpgrades ");
-                InitializeBundle(assetBundle, "Modded Item Upgrade Player Valuable Count Bundle", "MoreUpgrades ");
+                InitializeBundle("Modded Item Upgrade Player Map Enemy Tracker Bundle", "MoreUpgrades ");
+                InitializeBundle("Modded Item Upgrade Player Map Player Tracker Bundle", "MoreUpgrades ");
+                InitializeBundle("Modded Item Upgrade Player Sprint Usage Bundle", "MoreUpgrades ");
+                InitializeBundle("Modded Item Upgrade Player Valuable Count Bundle", "MoreUpgrades ");
             }
         }
 
@@ -283,24 +314,24 @@ namespace ItemBundles
             config_debugFakePlayers = Config.Bind("Dev", "Number of Fake Players", 0, new ConfigDescription("Adds fake players to bundle player calculations", new AcceptableValueRange<int>(0, 10), "HideFromREPOConfig"));
         }
 
-        internal void RegisterBundleItemRepoLib(AssetBundle assetBundle, string itemString)
+        internal void RegisterBundleItemRepoLib(string itemString)
         {
             Item item = assetBundle.LoadAsset<Item>(itemString);
             if (item == null)
             {
-                DebugLogger.LogError($"Item {itemString} not found!");
+                DebugLogger.LogError($"RegisterBundleItemRepoLib() Failed: Item {itemString} not found!");
                 return;
             }
 
             REPOLib.Modules.Items.RegisterItem(item);
         }
 
-        internal void InitializeBundle(AssetBundle assetBundle, string bundleItemString, string configSectionPrefix = "")
+        internal void InitializeBundle( string bundleItemString, string configSectionPrefix = "")
         {
             Item bundleItem = assetBundle.LoadAsset<Item>(bundleItemString);
             if (bundleItem == null)
             {
-                DebugLogger.LogError($"--- Bundle Item \"{bundleItemString}\" not found!");
+                DebugLogger.LogError($"InitializeBundle() Failed: Bundle Item \"{bundleItemString}\" not found!");
                 return;
             }
 
@@ -312,14 +343,14 @@ namespace ItemBundles
             Item bundleItem = item;
             if (bundleItem == null)
             {
-                DebugLogger.LogError($"--- Bundle Item not found!");
+                DebugLogger.LogError($"InitializeBundle() Failed: Bundle Item was null!");
                 return;
             }
 
             var bundleString = " Bundle";
             if (!item.itemAssetName.Contains(bundleString))
             {
-                DebugLogger.LogError($"--- Item {item.itemAssetName} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
+                DebugLogger.LogError($"InitializeBundle() Failed: Item {item.itemAssetName} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
                 return;
             }
 
@@ -328,13 +359,13 @@ namespace ItemBundles
 
             if (!originalItem)
             {
-                DebugLogger.LogError($"--- Didn't find {originalItemString}! Make sure itemAssetName of bundle Item and bundle Prefab is {originalItemString + bundleString}");
+                DebugLogger.LogError($"InitializeBundle() Failed: Didn't find {originalItemString}! Make sure itemAssetName of bundle Item and bundle Prefab is {originalItemString + bundleString}");
                 return;
             }
 
             if (itemBundleInfos.ContainsKey(originalItemString))
             {
-                DebugLogger.LogWarning($"--- bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
+                DebugLogger.LogWarning($"InitializeBundle() Warning: bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
             }
 
             itemDictionaryShopBlacklist.Add(bundleItem.itemAssetName, bundleItem);
@@ -362,7 +393,7 @@ namespace ItemBundles
             }
 
             itemBundleInfos[originalItemString] = bundleInfo;
-            DebugLogger.LogInfo($"--- Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}", true);
+            DebugLogger.LogInfo($"InitializeBundle() Debug: Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}", true);
 
         }
 

@@ -13,6 +13,10 @@ namespace ItemBundles
     [HarmonyPatch(typeof(StatsManager))]
     internal static class BundlePatch_StatsManager
     {
+
+        /* Old code, no longer needed since upgrade bundles spawn items instead of adding upgrades directly
+         * To be purged once sure it is obsolete
+         * 
         /// <summary>
         /// Modify strings before they are passed to original method so that bundles are counted as
         ///     the original upgrades for the sake of cost scaling
@@ -25,6 +29,7 @@ namespace ItemBundles
             var bundleString = " Bundle";
 
             // Add base upgrades to make sure they scale properly
+
             if (itemName.Contains(bundleString))
             {
                 var originalItemName = BundleHelper.GetItemStringFromBundle(itemName);
@@ -38,6 +43,7 @@ namespace ItemBundles
                 }
             }
         }
+        */
 
         [HarmonyPostfix, HarmonyPatch(nameof(StatsManager.Start))]
         public static void Start_Postfix(StatsManager __instance)
@@ -223,27 +229,6 @@ namespace ItemBundles
 
                 promptPre = promptPre + $"\n[Bundle of {numText}]";
                 __instance.promptName = promptPre;
-
-
-                // REPLACED WITH ABOVE TRANSPILER
-                // This method was tanking frames because InputManager.instance.InputDisplayReplaceTags("[interact]") loops through every input binding and is called every frame
-                // The below change worked but I wanted a better solution so the transpiler version was made
-                /*
-                //If we're in a shop, remove interactable prompt
-                // This is a fix for consumable items, upgrades and health packs have their own code already
-                if (SemiFunc.RunIsShop())
-                {
-                    //var interactKeyText = InputManager.instance.InputDisplayReplaceTags("[interact]")
-                    var inputManager = InputManager.instance;
-                    var interactKey = inputManager.tagDictionary["[interact]"];
-                    var interactKeyText = inputManager.InputDisplayGet(interactKey, MenuKeybind.KeyType.InputKey, MovementDirection.Up);
-                
-                    var interactString = " <color=#FFFFFF>[<u><b>" + interactKeyText + "/b></u>]</color>";
-                    if (__instance.promptName.Contains(interactString))
-                    {
-                        __instance.promptName = BundleHelper.RemoveString(__instance.promptName, interactString);
-                    }
-                }*/
             }
         }
     }
@@ -252,6 +237,11 @@ namespace ItemBundles
     [HarmonyPriority(Priority.Last)]
     internal static class BundlePatch_ShopManager
     {
+        /// <summary>
+        /// Refresh and populate ItemBundles.Instance.itemDictionaryShop, using a blacklist to prevent bundles from being directly spawned
+        ///     so that we can replace items via another function without altering any item weights/chances
+        /// </summary>
+        /// <param name="__instance"></param>
         [HarmonyPrefix, HarmonyPatch(nameof(ShopManager.GetAllItemsFromStatsManager))]
         static void GetAllItemsFromStatsManager_Prefix(ShopManager __instance)
         {

@@ -553,7 +553,7 @@ GameObject:
   - component: {fileID: 2055730454358347890}
   - component: {fileID: -147216884000874454}
   m_Layer: 0
-  m_Name: Item Upgrade Generated Bundle
+  m_Name: Item Upgrade Bundle Template
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

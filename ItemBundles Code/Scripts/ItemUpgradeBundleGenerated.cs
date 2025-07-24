@@ -56,6 +56,7 @@ namespace ItemBundles
                 DebugLogger.LogWarning("========= GENERATED BUNDLE: GAME PHASE Start", true);
                 var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = false;
+                isPrefab = false;
             }
 
             FixMaterial();
