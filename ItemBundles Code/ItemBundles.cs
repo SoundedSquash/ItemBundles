@@ -38,6 +38,8 @@ namespace ItemBundles
         public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
         public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
 
+        public static List<Mesh> upgradeBundleMeshes = new List<Mesh>();
+
         public bool mainMenuReached { get; set; }
         public GameObject templateUpgradeBundlePrefab { get; set; }
 
@@ -80,8 +82,6 @@ namespace ItemBundles
             manager.hideFlags = HideFlags.HideAndDontSave;
             DontDestroyOnLoad(manager);
 
-            RegisterItemBundles();
-
             if ( MoreUpgradesCompat.enabled )
             {
                 MoreUpgradesCompat.InitCompat();
@@ -92,6 +92,8 @@ namespace ItemBundles
                 VanillaUpgradesCompat.InitCompat();
                 DebugLogger.LogInfo($"VanillaUpgradesCompat has loaded!", true);
             }
+
+            RegisterItemBundles();
 
             DebugLogger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
         }
@@ -164,7 +166,8 @@ namespace ItemBundles
                     allUpgrades.Add(upgradeItem);
                 }
             }
-
+            
+            upgradeBundleMeshes = assetBundle.LoadAllAssets<Mesh>().Where(mesh => mesh.name.ToLower().Contains("mesh_bundle_upgrade")).ToList();
             foreach (Item upgradeItem in allUpgrades)
             {
                 // Plan to have for having predetermined or otherwise unique prefabs
@@ -217,6 +220,9 @@ namespace ItemBundles
 
             var bundleComp = newBundlePrefab.GetComponent<ItemUpgradeBundleGenerated>();
             bundleComp.originalItem = baseItem;
+
+            var randMeshIndex = Random.RandomRangeInt(0, upgradeBundleMeshes.Count);
+            bundleComp.SetMesh(upgradeBundleMeshes[randMeshIndex]);
 
             //TODO: make mesh randomly choose from pool of meshes so they aren't all the same
 

@@ -105,6 +105,14 @@ namespace ItemBundles
         }
 
 
+        public void SetMesh( Mesh mesh )
+        {
+            if (!mesh) return;
+            var meshObj = gameObject.transform.Find("Mesh");
+            var meshF = meshObj.GetComponent<MeshFilter>();
+            meshF.mesh = mesh;
+        }
+
         /// <summary>
         /// Get a material from a renderer component so we can read and copy it's info
         /// </summary>

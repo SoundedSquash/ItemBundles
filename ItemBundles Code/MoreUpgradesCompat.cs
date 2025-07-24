@@ -32,6 +32,7 @@ namespace ItemBundles
             foreach (UpgradeItem upgradeItem in pluginInstance.upgradeItems)
             {
                 var item = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItem.name);
+                DebugLogger.LogInfo($"MoreUpgradesCompat: Init {upgradeItem}, {item}");
                 allUpgrades.Add(item);
             }
 
