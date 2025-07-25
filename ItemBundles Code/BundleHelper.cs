@@ -93,7 +93,6 @@ namespace ItemBundles
                 ? baseString
                 : baseString.Remove(index, removeString.Length);
 
-            //CustomLogger.LogInfo($"--- Removing \"{removeString}\" from \"{baseString}\", got  \"{newString}\"", true);
             return newString;
         }
 
@@ -124,48 +123,10 @@ namespace ItemBundles
             }
         }
 
-        /* Deprecated, to be purged at a later date
-        public static void CallBundleUpgrade( string upgradeName )
+        public static bool SceneIsPrefabStage()
         {
-            var players = SemiFunc.PlayerGetAll();
-
-            foreach (var player in players)
-            {
-                switch (upgradeName)
-                {
-                    case "Item Upgrade Map Player Count":
-                        PunManager.instance.UpgradeMapPlayerCount(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Energy":
-                        PunManager.instance.UpgradePlayerEnergy(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Extra Jump":
-                        PunManager.instance.UpgradePlayerExtraJump(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Grab Range":
-                        PunManager.instance.UpgradePlayerGrabRange(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Grab Strength":
-                        PunManager.instance.UpgradePlayerGrabStrength(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Throw Strength":
-                        PunManager.instance.UpgradePlayerThrowStrength(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Health":
-                        PunManager.instance.UpgradePlayerHealth(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Sprint Speed":
-                        PunManager.instance.UpgradePlayerSprintSpeed(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    case "Item Upgrade Player Tumble Launch":
-                        PunManager.instance.UpgradePlayerTumbleLaunch(SemiFunc.PlayerGetSteamID(player));
-                        break;
-                    default:
-                        DebugLogger.LogWarning($"{upgradeName} not found in switch statement!");
-                        break;
-                }
-            }
+            if (!ItemBundles.Instance.mainMenuReached || SemiFunc.MenuLevel()) return true;
+            else return RunManager.instance == null;
         }
-        */
     }
 }

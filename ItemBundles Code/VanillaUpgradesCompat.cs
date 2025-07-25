@@ -30,27 +30,5 @@ namespace ItemBundles
             var itemAssetName = BundleHelper.GetItemStringFromBundle(bundleAssetName);
             return VanillaUpgrades.Plugin.UpgradeValueIncrease(fallbackMult, itemAssetName); ;
         }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void CallBundleUpgrade(ItemToggle itemToggle)
-        {
-            var itemAssetName = BundleHelper.GetItemStringFromBundle( itemToggle.gameObject.GetComponent<ItemAttributes>().item.itemAssetName );
-            CallBundleUpgrade( itemAssetName );
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static void CallBundleUpgrade( string itemAssetName )
-        {
-            var pluginInstance = VanillaUpgrades.Plugin.instance;
-
-            UpgradeItem upgradeItem = pluginInstance.upgradeItems.FirstOrDefault((UpgradeItem x) => x.name == itemAssetName);
-            if (upgradeItem != null)
-            {
-                foreach (PlayerAvatar player in SemiFunc.PlayerGetAll())
-                {
-                    VanillaUpgradesManager.instance.Upgrade(upgradeItem.name, SemiFunc.PlayerGetSteamID(player), 1);
-                }
-            }
-        }
     }
 }

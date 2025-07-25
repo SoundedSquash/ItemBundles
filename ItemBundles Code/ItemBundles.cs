@@ -16,12 +16,16 @@ namespace ItemBundles
     public class ItemBundles : BaseUnityPlugin
     {
         public static ItemBundles Instance { get; private set; } = null!;
+
         internal Harmony? Harmony { get; set; }
 
         public AssetBundle assetBundle;
 
         public Dictionary<string, Item> itemDictionaryShop = new Dictionary<string, Item>();
         public Dictionary<string, Item> itemDictionaryShopBlacklist = new Dictionary<string, Item>();
+        public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
+        public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
+        public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
 
         public ConfigEntry<bool> config_disableBundlesSP { get; private set; }
         public ConfigEntry<int> config_chanceBundlesInShop { get; private set; }
@@ -34,13 +38,10 @@ namespace ItemBundles
         public List<Item> allUpgradesVanilla = new List<Item>();
         public List<Item> allUpgradesRepoLib = new List<Item>();
         public List<Item> allUpgrades = new List<Item>();
-        public Dictionary<SemiFunc.itemType, BundleShopInfo> itemTypeBundleInfos = new Dictionary<SemiFunc.itemType, BundleShopInfo>();
-        public Dictionary<string, BundleShopInfo> itemBundleInfos = new Dictionary<string, BundleShopInfo>();
-        public Dictionary<Item, GameObject> generatedBundles = new Dictionary<Item, GameObject>();
-
-        public static List<Mesh> upgradeBundleMeshes = new List<Mesh>();
+        public List<Mesh> upgradeBundleMeshes = new List<Mesh>();
 
         public bool mainMenuReached { get; set; }
+
         public GameObject templateUpgradeBundlePrefab { get; set; }
 
         public class BundleShopInfo
@@ -101,24 +102,12 @@ namespace ItemBundles
 
         public void RegisterItemBundles()
         {
-            if (assetBundle == null)
+            if (!assetBundle)
             {
                 DebugLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
                 DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
-
-
-            // Replaced with Dynamic Generation method, to be purged later
-            //RegisterBundleItemRepoLib("Item Upgrade Map Player Count Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Energy Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Extra Jump Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Range Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Strength Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Grab Throw Bundle"); //Exists in game files, but not fully implemented
-            //RegisterBundleItemRepoLib("Item Upgrade Player Health Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Sprint Speed Bundle");
-            //RegisterBundleItemRepoLib("Item Upgrade Player Tumble Launch Bundle");
 
             RegisterBundleItemRepoLib("Item Health Pack Small Bundle");
             RegisterBundleItemRepoLib("Item Health Pack Medium Bundle");
@@ -132,28 +121,28 @@ namespace ItemBundles
             RegisterBundleItemRepoLib("Item Mine Shockwave Bundle");
             RegisterBundleItemRepoLib("Item Mine Stun Bundle");
 
-
+            // Start dynamic upgrade bundle prefab generation here
             var tempBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Bundle Template");
             templateUpgradeBundlePrefab = tempBundleItem.prefab;
 
-            if (tempBundleItem == null || templateUpgradeBundlePrefab == null)
+            if (!tempBundleItem || !templateUpgradeBundlePrefab)
             {
                 DebugLogger.LogError($"tempBundle item or prefab was null! Unable to generate custom upgrade bundles");
                 DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
 
-            // Generate Updgrade Bundles
             allUpgradesVanilla.Clear();
             allUpgrades.Clear();
 
-            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player")).ToList();
+            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player") && item.prefab != null).ToList();
             allUpgrades = new List<Item>(allUpgradesVanilla);
 
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
-                if (upgradeItem == null) return;
+                if (!upgradeItem) return;
+                if (!upgradeItem.prefab) return;
 
                 allUpgradesRepoLib.Add(upgradeItem);
                 allUpgrades.Add(upgradeItem);
@@ -182,8 +171,8 @@ namespace ItemBundles
         {
             //var assetPath = "Assets/ItemBundles/Resources/Unused/Items/Items/";
             Item bundleItem = assetBundle.LoadAsset<Item>(upgradeItem.itemAssetName + " Bundle.asset");
-            if (bundleItem == null) return false;
-            if (bundleItem.prefab == null) return false;
+            if (!bundleItem) return false;
+            if (!bundleItem.prefab) return false;
 
             REPOLib.Modules.Items.RegisterItem(bundleItem);
             return true;
@@ -222,9 +211,7 @@ namespace ItemBundles
             bundleComp.originalItem = baseItem;
 
             var randMeshIndex = Random.RandomRangeInt(0, upgradeBundleMeshes.Count);
-            bundleComp.SetMesh(upgradeBundleMeshes[randMeshIndex]);
-
-            //TODO: make mesh randomly choose from pool of meshes so they aren't all the same
+            bundleComp.SetBoxMesh(upgradeBundleMeshes[randMeshIndex]);
 
             REPOLib.Modules.Items.RegisterItem(newBundleItem);
             generatedBundles[newBundleItem] = newBundlePrefab;
@@ -232,23 +219,12 @@ namespace ItemBundles
 
         public void InitializeItemBundles()
         {
-            if (assetBundle == null)
+            if (!assetBundle)
             {
                 DebugLogger.LogError($"Assetbundle \"itembundles\" not found! Please make sure that it exists in the same folder as the mod DLL");
                 DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
-
-            // Replaced with Dynamic Generation method, to be purged later
-            //InitializeBundle("Item Upgrade Map Player Count Bundle");
-            //InitializeBundle("Item Upgrade Player Energy Bundle");
-            //InitializeBundle("Item Upgrade Player Extra Jump Bundle");
-            //InitializeBundle("Item Upgrade Player Grab Range Bundle");
-            //InitializeBundle("Item Upgrade Player Grab Strength Bundle");
-            //InitializeBundle("Item Upgrade Player Grab Throw Bundle"); //Exists in game files, but not fully implemented
-            //InitializeBundle("Item Upgrade Player Health Bundle");
-            //InitializeBundle("Item Upgrade Player Sprint Speed Bundle");
-            //InitializeBundle("Item Upgrade Player Tumble Launch Bundle");
 
             InitializeBundle("Item Health Pack Small Bundle");
             InitializeBundle("Item Health Pack Medium Bundle");
@@ -264,7 +240,6 @@ namespace ItemBundles
 
             foreach ( Item item in generatedBundles.Keys )
             {
-                //TODO: See if possible to determine mod/origin for better sorting
                 // AFAIK not currently possible to determine origin mod for REPOLib upgrades
                 var configPrefix = "";
                 var bundleComp = item.prefab.GetComponent<ItemUpgradeBundleGenerated>();
@@ -326,7 +301,7 @@ namespace ItemBundles
         internal void RegisterBundleItemRepoLib(string itemString)
         {
             Item item = assetBundle.LoadAsset<Item>(itemString);
-            if (item == null)
+            if (!item)
             {
                 DebugLogger.LogError($"RegisterBundleItemRepoLib() Failed: Item {itemString} not found!");
                 return;
@@ -338,7 +313,7 @@ namespace ItemBundles
         internal void InitializeBundle( string bundleItemString, string configSectionPrefix = "")
         {
             Item bundleItem = assetBundle.LoadAsset<Item>(bundleItemString);
-            if (bundleItem == null)
+            if (!bundleItem)
             {
                 DebugLogger.LogError($"InitializeBundle() Failed: Bundle Item \"{bundleItemString}\" not found!");
                 return;
@@ -350,7 +325,7 @@ namespace ItemBundles
         internal void InitializeBundle( Item item, string configSectionPrefix = "")
         {
             Item bundleItem = item;
-            if (bundleItem == null)
+            if (!bundleItem)
             {
                 DebugLogger.LogError($"InitializeBundle() Failed: Bundle Item was null!");
                 return;
@@ -420,8 +395,8 @@ namespace ItemBundles
         private void Update()
         {
             // Hacky code to bypass missing reference of RunManager.instance.levelSplashScreen or SemiFunc.SplashScreenLevel()
-            // Necessary to initialize dynamically generated bundles
-            if ( mainMenuReached || RunManager.instance == null ) return;
+            // Necessary to initialize dynamically generated bundles without errors
+            if ( mainMenuReached || !RunManager.instance ) return;
 
             mainMenuReached = SemiFunc.IsMainMenu();
         }

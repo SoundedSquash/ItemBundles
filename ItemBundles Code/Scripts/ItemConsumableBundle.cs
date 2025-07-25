@@ -48,8 +48,7 @@ namespace ItemBundles
 
         public void SpawnItems()
         {
-            //TODO: Add velocity to items
-            //TODO: Adjust item spacing dyanmically
+            //TODO: Adjust item spacing more dynamically
             var playerCount = SemiFunc.PlayerGetAll().Count;
 
             var item = GetComponent<ItemAttributes>().item;

@@ -13,38 +13,6 @@ namespace ItemBundles
     [HarmonyPatch(typeof(StatsManager))]
     internal static class BundlePatch_StatsManager
     {
-
-        /* Old code, no longer needed since upgrade bundles spawn items instead of adding upgrades directly
-         * To be purged once sure it is obsolete
-         * 
-        /// <summary>
-        /// Modify strings before they are passed to original method so that bundles are counted as
-        ///     the original upgrades for the sake of cost scaling
-        /// </summary>
-        /// <param name="__instance"></param>
-        /// <param name="itemName"></param>
-        [HarmonyPostfix, HarmonyPatch(nameof(StatsManager.AddItemsUpgradesPurchased))]
-        private static void AddItemsUpgradesPurchased_Postfix(StatsManager __instance, ref string itemName)
-        {
-            var bundleString = " Bundle";
-
-            // Add base upgrades to make sure they scale properly
-
-            if (itemName.Contains(bundleString))
-            {
-                var originalItemName = BundleHelper.GetItemStringFromBundle(itemName);
-
-                Dictionary<string, int> dictionary = __instance.itemsUpgradesPurchased;
-
-                int num;
-                if ( dictionary.TryGetValue(originalItemName, out num) )
-                {
-                    dictionary[originalItemName] = num + 1;
-                }
-            }
-        }
-        */
-
         [HarmonyPostfix, HarmonyPatch(nameof(StatsManager.Start))]
         public static void Start_Postfix(StatsManager __instance)
         {
@@ -56,8 +24,7 @@ namespace ItemBundles
     internal static class BundlePatch_ItemAttributes
     {
         /// <summary>
-        /// Adds an additional check to name display to prevent adding Interact text to bundles while in the shop
-        /// TODO: Finish this to prevent NREs
+        /// TODO: Finish this to prevent NREs on startup
         /// </summary>
         /// <param name="instructions"></param>
         /// <returns></returns>
@@ -397,7 +364,7 @@ namespace ItemBundles
                     var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfos[item.itemType];
                     var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.itemAssetName];
 
-                    if (itemBundleInfo.bundleItem.prefab == null)
+                    if (!itemBundleInfo.bundleItem.prefab)
                     {
                         DebugLogger.LogInfo($"{itemBundleInfo.bundleItem} prefab was null! Skipping entry", true);
                         continue;
@@ -454,7 +421,7 @@ namespace ItemBundles
         [HarmonyPrefix, HarmonyPatch(nameof(PhysGrabObject.OnEnable))]
         private static bool OnEnable_Prefix(PhysGrabObject __instance)
         {
-            return !ItemUpgradeBundleGenerated.IsPrefabStage();
+            return !BundleHelper.SceneIsPrefabStage();
         }
     }
 
@@ -469,7 +436,7 @@ namespace ItemBundles
         [HarmonyPrefix, HarmonyPatch(nameof(RoomVolumeCheck.CheckStart))]
         private static bool CheckStart_Prefix(RoomVolumeCheck __instance)
         {
-            return !ItemUpgradeBundleGenerated.IsPrefabStage();
+            return !BundleHelper.SceneIsPrefabStage();
         }
     }
 }

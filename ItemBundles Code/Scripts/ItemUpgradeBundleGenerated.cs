@@ -24,10 +24,9 @@ namespace ItemBundles
             photonView = GetComponent<PhotonView>();
             impactDetector = GetComponent<PhysGrabObjectImpactDetector>();
 
-            // This specifically prevents the intiial prefab from being deleted or falling through the scene
-            if ( IsPrefabStage() )
+            // This specifically prevents the intial prefab from being deleted or falling through the scene
+            if ( BundleHelper.SceneIsPrefabStage() )
             {
-                DebugLogger.LogWarning("========= GENERATED BUNDLE: PREFAB PHASE Awake", true);
                 impactDetector.destroyDisable = true;
                 this.transform.parent = BundleManager.instance.transform;
                 var rb = GetComponent<Rigidbody>();
@@ -36,7 +35,6 @@ namespace ItemBundles
             }
             else
             {
-                DebugLogger.LogWarning("========= GENERATED BUNDLE: GAME PHASE Awake", true);
                 impactDetector.destroyDisable = false;
                 var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = false;
@@ -45,35 +43,26 @@ namespace ItemBundles
 
         private void Start()
         {
-            // This specifically prevents the intiial prefab from being deleted or falling through the scene
-            if ( IsPrefabStage() )
+            // This specifically prevents the intial prefab from being deleted or falling through the scene
+            if ( BundleHelper.SceneIsPrefabStage() )
             {
-                DebugLogger.LogWarning("========= GENERATED BUNDLE: PREFAB PHASE Start", true);
                 StartCoroutine(LateStart(0.1f));
             }
+
             else
             {
-                DebugLogger.LogWarning("========= GENERATED BUNDLE: GAME PHASE Start", true);
                 var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = false;
                 isPrefab = false;
             }
 
-            FixMaterial();
-            FixLight();
-        }
-
-        public static bool IsPrefabStage()
-        {
-            if (!ItemBundles.Instance.mainMenuReached || SemiFunc.MenuLevel()) return true;
-            else return RunManager.instance == null;
+            UpdateMaterial();
+            UpdateLightColor();
         }
 
         IEnumerator LateStart(float waitTime)
         {
-            DebugLogger.LogWarning("========= GENERATED BUNDLE: LateStart start", true);
             yield return new WaitForSeconds(waitTime);
-            DebugLogger.LogWarning("========= GENERATED BUNDLE: LateStart end", true);
             this.transform.parent = BundleManager.instance.transform;
             var rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
@@ -105,7 +94,7 @@ namespace ItemBundles
         }
 
 
-        public void SetMesh( Mesh mesh )
+        public void SetBoxMesh( Mesh mesh )
         {
             if (!mesh) return;
             var meshObj = gameObject.transform.Find("Mesh");
@@ -118,24 +107,21 @@ namespace ItemBundles
         /// </summary>
         /// <param name="upgradeItemName"></param>
         /// <returns>First material with the string "upgrade" in its name</returns>
-        public Material? GetBoxMat()
+        public Material? GetOriginalBoxMat()
         {
             Item obj = originalItem;
-            if (obj == null)
-            {
-                return null;
-            }
+            if (!obj) return null;
 
             Material? mat = null;
 
             var mesh = obj.prefab.transform.Find("Mesh");
             var meshR = mesh.GetComponent<MeshRenderer>();
-            if (meshR != null)
+            if (meshR)
             {
                 mat = meshR.materials[0];
             }
 
-            if ( mat == null )
+            if (!mat)
             {
                 DebugLogger.LogError($"- GetBoxMat {originalItem.itemAssetName} failed, returning NULL", true);
             }
@@ -148,52 +134,41 @@ namespace ItemBundles
         /// </summary>
         /// <param name="upgradeItemName"></param>
         /// <returns> Light Component on the gameObject "Light - Small Lamp"</returns>
-        public Light? GetLight()
+        public Light? GetOriginalLight()
         {
             Item obj = originalItem;
-            if (obj == null)
-            {
-                DebugLogger.LogError($"- GetLight {originalItem.itemAssetName} failed", true);
-                return null;
-            }
+            if ( !obj ) return null;
 
             var lightObj = obj.prefab.transform.Find("Light - Small Lamp");
-            if (lightObj == null)
-            {
-                return null;
-            }
-            else
-            {
-                var light = lightObj.GetComponent<Light>();
-                return light;
-            }
+            if ( !lightObj ) return null;
+
+            var light = lightObj.GetComponent<Light>();
+            return light;
         }
 
-        public void FixMaterial()
+        public void UpdateMaterial()
         {
-            var originalMat = GetBoxMat();
-            if (originalMat != null)
+            var originalMat = GetOriginalBoxMat();
+            if (!originalMat) return;
+
+            var meshFilters = GetComponentsInChildren<MeshFilter>();
+            foreach (MeshFilter meshF in meshFilters)
             {
-                var meshFilters = GetComponentsInChildren<MeshFilter>();
-                foreach (MeshFilter meshF in meshFilters)
+                var meshR = meshF.GetComponent<MeshRenderer>();
+                if (!meshR) return;
+
+                if (meshR.materials[0].name.Contains("upgrade"))
                 {
-                    var meshR = meshF.GetComponent<MeshRenderer>();
-                    if (meshR != null)
-                    {
-                        if (meshR.materials[0].name.Contains("upgrade"))
-                        {
-                            Material[] newMaterials = new Material[2] { originalMat, meshR.materials[1] };
-                            meshR.materials = newMaterials;
-                        }
-                    }
+                    Material[] newMaterials = new Material[2] { originalMat, meshR.materials[1] };
+                    meshR.materials = newMaterials;
                 }
             }
         }
 
-        public void FixLight()
+        public void UpdateLightColor()
         {
             var light = gameObject.transform.Find("Light - Small Lamp").GetComponent<Light>();
-            var originalLight = GetLight();
+            var originalLight = GetOriginalLight();
             if (light != null && originalLight != null)
             {
 
@@ -203,7 +178,6 @@ namespace ItemBundles
 
         public void OnDestroy()
         {
-            DebugLogger.LogError("======== DESTROYING GENERATED BUNDLE");
         }
     }
 }
