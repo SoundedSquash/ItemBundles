@@ -125,6 +125,10 @@ namespace ItemBundles
             {
                 DebugLogger.LogError($"- GetBoxMat {originalItem.itemAssetName} failed, returning NULL", true);
             }
+            else
+            {
+                DebugLogger.LogInfo($"- GetBoxMat returning {mat}", true);
+            }
 
             return mat;
         }
@@ -151,17 +155,12 @@ namespace ItemBundles
             var originalMat = GetOriginalBoxMat();
             if (!originalMat) return;
 
-            var meshFilters = GetComponentsInChildren<MeshFilter>();
-            foreach (MeshFilter meshF in meshFilters)
+            var mesh = transform.Find("Mesh");
+            var meshR = mesh.GetComponent<MeshRenderer>();
+            if (meshR.materials[0].name.Contains("upgrade"))
             {
-                var meshR = meshF.GetComponent<MeshRenderer>();
-                if (!meshR) return;
-
-                if (meshR.materials[0].name.Contains("upgrade"))
-                {
-                    Material[] newMaterials = new Material[2] { originalMat, meshR.materials[1] };
-                    meshR.materials = newMaterials;
-                }
+                Material[] newMaterials = new Material[2] { originalMat, meshR.materials[1] };
+                meshR.materials = newMaterials;
             }
         }
 

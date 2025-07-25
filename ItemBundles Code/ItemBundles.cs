@@ -4,6 +4,7 @@ using HarmonyLib;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace ItemBundles
@@ -36,7 +37,7 @@ namespace ItemBundles
         public ConfigEntry<bool> config_debugLogging { get; private set; }
 
         public List<Item> allUpgradesVanilla = new List<Item>();
-        public List<Item> allUpgradesRepoLib = new List<Item>();
+        public List<Item> allUpgradesREPOLib = new List<Item>();
         public List<Item> allUpgrades = new List<Item>();
         public List<Mesh> upgradeBundleMeshes = new List<Mesh>();
 
@@ -122,12 +123,12 @@ namespace ItemBundles
             RegisterBundleItemRepoLib("Item Mine Stun Bundle");
 
             // Start dynamic upgrade bundle prefab generation here
-            var tempBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Bundle Template");
-            templateUpgradeBundlePrefab = tempBundleItem.prefab;
+            var templateBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Bundle Template");
+            templateUpgradeBundlePrefab = templateBundleItem.prefab;
 
-            if (!tempBundleItem || !templateUpgradeBundlePrefab)
+            if (!templateBundleItem || !templateUpgradeBundlePrefab)
             {
-                DebugLogger.LogError($"tempBundle item or prefab was null! Unable to generate custom upgrade bundles");
+                DebugLogger.LogError($"Template bundle item or prefab was null! Unable to generate upgrade bundles");
                 DebugLogger.LogError($"ItemBundles has run into a fatal error! The mod will not work correctly and may cause issues elsewhere!");
                 return;
             }
@@ -141,19 +142,16 @@ namespace ItemBundles
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
-                if (!upgradeItem) return;
-                if (!upgradeItem.prefab) return;
+                if (!upgradeItem) continue;
+                if (!upgradeItem.prefab) continue;
 
-                allUpgradesRepoLib.Add(upgradeItem);
+                allUpgradesREPOLib.Add(upgradeItem);
                 allUpgrades.Add(upgradeItem);
             }
 
             if ( MoreUpgradesCompat.enabled )
             {
-                foreach( Item upgradeItem in MoreUpgradesCompat.allUpgrades )
-                {
-                    allUpgrades.Add(upgradeItem);
-                }
+                allUpgrades.AddRange(MoreUpgradesCompat.allUpgrades);
             }
             
             upgradeBundleMeshes = assetBundle.LoadAllAssets<Mesh>().Where(mesh => mesh.name.ToLower().Contains("mesh_bundle_upgrade")).ToList();
@@ -180,8 +178,7 @@ namespace ItemBundles
 
         public void GenerateUpgradeBundle( Item baseItem )
         {
-            DebugLogger.LogInfo($"Trying generated bundle: {baseItem.name}", true);
-            DebugLogger.LogWarning($"Will generate NREs on initial generation, ignore them.", true);
+            DebugLogger.LogInfo($"Generating Upgrade Bundle: {baseItem.name}", true);
 
             var newBundleItem = ScriptableObject.CreateInstance<Item>();
             var newBundlePrefab = GameObject.Instantiate(templateUpgradeBundlePrefab, new Vector3(0, 100, 0), Quaternion.identity);

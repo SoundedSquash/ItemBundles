@@ -33,6 +33,10 @@ namespace ItemBundles
             {
                 var item = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItem.name);
                 DebugLogger.LogInfo($"MoreUpgradesCompat: Init {upgradeItem}, {item}");
+
+                if (!item) continue;
+                if (!item.prefab) continue;
+
                 allUpgrades.Add(item);
             }
         }

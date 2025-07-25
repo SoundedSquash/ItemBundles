@@ -24,62 +24,6 @@ namespace ItemBundles
     internal static class BundlePatch_ItemAttributes
     {
         /// <summary>
-        /// TODO: Finish this to prevent NREs on startup
-        /// </summary>
-        /// <param name="instructions"></param>
-        /// <returns></returns>
-        [HarmonyTranspiler, HarmonyPatch(nameof(ItemAttributes.Start))]
-        static IEnumerable<CodeInstruction> Start_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator generator)
-        {
-            var codeMatcher = new CodeMatcher(instructions, generator);
-
-            //
-            // Expected Behavior: Add branch to Start() Line 44
-            // this.GetValue()
-            // to
-            // if ( !ItemUpgradeBundleGenerated.IsObjectBundlePrefab(this.gameObject) )
-            // {
-            //      this.GetValue()
-            // }
-            
-            // Expect IL_0165
-            codeMatcher.MatchForward(true, (CodeMatch[])(object)new CodeMatch[4]
-            {
-                new CodeMatch((OpCode?)OpCodes.Ldsfld),
-                new CodeMatch((OpCode?)OpCodes.Ldfld),
-                new CodeMatch((OpCode?)OpCodes.Callvirt),
-                new CodeMatch((OpCode?)OpCodes.Callvirt)
-            })
-            .ThrowIfInvalid("ShowingInfo(): Couldn't find matching code");
-
-            // Expect IL_0170
-            codeMatcher.Advance(3);
-
-            // TODO: Get IL_0170 label for later
-
-            // Expect IL_0165
-            codeMatcher.Advance(-3);
-
-            /*
-            codeMatcher.Insert((CodeInstruction[])(object)new CodeInstruction[4]
-            {
-                // store "this" to stack
-			    new CodeInstruction(OpCodes.Ldarg_0),
-                // consume stack obj 0, store current stack's gameObject field to 
-                new CodeInstruction(OpCodes.Ldfld, (object)AccessTools.Field(typeof(ItemAttributes), "itemAssetName")),stack
-                // call ItemUpgradeBundleGenerated.IsObjectBundlePrefab(), consuming stack as input
-                new CodeInstruction(OpCodes.Call, (object)AccessTools.Method(typeof(ItemUpgradeBundleGenerated), nameof(ItemUpgradeBundleGenerated.IsObjectBundlePrefab))),
-                // if true, skip to IL_0170 label
-			    new CodeInstruction(OpCodes.Brtrue, exitOperand)
-            });
-
-            DebugLogger.LogInfo("--- ItemAttributes.Start(): ADDING NEW INSTRUCTIONS", true);
-            */
-
-            return codeMatcher.InstructionEnumeration();
-        }
-
-        /// <summary>
         /// Patch that prevents generated 'prefabs' from spamming NRE errors in the console
         /// </summary>
         /// <param name="__instance"></param>
@@ -90,9 +34,15 @@ namespace ItemBundles
             return !BundleHelper.IsObjectBundlePrefab(__instance.gameObject);
         }
 
+        /// <summary>
+        /// Patch that prevents generated 'prefabs' from spamming NRE errors in the console
+        /// </summary>
+        /// <param name="__instance"></param>
+        /// <returns></returns>
         [HarmonyPrefix, HarmonyPatch(nameof(ItemAttributes.GetValue))]
-        private static void GetValue_Prefix(ItemAttributes __instance)
+        private static bool GetValue_Prefix(ItemAttributes __instance)
         {
+            return !BundleHelper.SceneIsPrefabStage();
         }
 
         /// <summary>
@@ -104,6 +54,7 @@ namespace ItemBundles
         [HarmonyPriority(Priority.Last)]
         private static void GetValue_Postfix(ItemAttributes __instance)
         {
+            if (BundleHelper.SceneIsPrefabStage()) return;
             if (!GameManager.Multiplayer() || PhotonNetwork.IsMasterClient)
             {
                 // We have a bundle, multiply price by a portion of player count
