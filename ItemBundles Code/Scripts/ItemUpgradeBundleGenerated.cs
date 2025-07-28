@@ -11,7 +11,7 @@ namespace ItemBundles
     {
         private ItemToggle itemToggle;
 
-        private PhotonView photonView;
+        private PhotonTransformView photonTransformView;
         private PhysGrabObjectImpactDetector impactDetector;
 
         //What item should we spawn?
@@ -21,12 +21,14 @@ namespace ItemBundles
         private void Awake()
         {
             itemToggle = GetComponent<ItemToggle>();
-            photonView = GetComponent<PhotonView>();
+            photonTransformView = GetComponent<PhotonTransformView>();
             impactDetector = GetComponent<PhysGrabObjectImpactDetector>();
 
             // This specifically prevents the intial prefab from being deleted or falling through the scene
             if ( BundleHelper.SceneIsPrefabStage() )
             {
+                hideFlags = HideFlags.HideAndDontSave;
+                DontDestroyOnLoad(this.gameObject);
                 impactDetector.destroyDisable = true;
                 this.transform.parent = BundleManager.instance.transform;
                 var rb = GetComponent<Rigidbody>();
@@ -54,6 +56,7 @@ namespace ItemBundles
                 var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = false;
                 isPrefab = false;
+                photonTransformView.enabled = true;
             }
 
             UpdateMaterial();
@@ -66,8 +69,9 @@ namespace ItemBundles
             this.transform.parent = BundleManager.instance.transform;
             var rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
-            rb.position = Vector3.zero;
             rb.rotation = Quaternion.identity;
+            transform.position = new Vector3(0, 5, 0);
+            DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
         }
 
         public void SpawnItems()
@@ -84,11 +88,14 @@ namespace ItemBundles
                 {
                     var obj = Object.Instantiate(originalItem.prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+
                 }
                 if ( SemiFunc.IsMasterClient() )
                 {
                     GameObject obj = PhotonNetwork.Instantiate("Items/" + originalItem.prefab.name, base.transform.position + spawnOffset, gameObject.transform.rotation);
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.itemAssetName);
                 }
             }
         }
@@ -170,7 +177,6 @@ namespace ItemBundles
             var originalLight = GetOriginalLight();
             if (light != null && originalLight != null)
             {
-
                 light.color = originalLight.color;
             }
         }
