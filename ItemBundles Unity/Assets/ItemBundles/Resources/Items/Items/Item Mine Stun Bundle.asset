@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   disabled: 0
   itemAssetName: Item Mine Stun Bundle
-  itemName: Stun Mines
+  itemName: Trapzaps
   description: 
   itemType: 11
   emojiIcon: 33

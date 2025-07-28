@@ -10,6 +10,11 @@ namespace ItemBundles
         PhysGrabObject physGrabObject;
         Rigidbody rb;
 
+        Vector3 direction = Vector3.zero;
+        float forceMin = 1f;
+        float forceMax = 5f;
+        float forceMult = 1f;
+
         public void Start()
         {
             physGrabObject = GetComponent<PhysGrabObject>();
@@ -24,9 +29,9 @@ namespace ItemBundles
             {
                 yield return null;
             }
-            Vector3 vector = Random.insideUnitSphere;
-            rb.AddForce(vector * Random.Range(1, 5), ForceMode.Impulse);
-            rb.AddTorque(Random.insideUnitSphere * Random.Range(1f, 5f), ForceMode.Impulse);
+            Vector3 vector = direction == Vector3.zero ? Random.insideUnitSphere : direction;
+            rb.AddForce(vector * forceMult * Random.Range(forceMin, forceMax), ForceMode.Impulse);
+            rb.AddTorque(Random.insideUnitSphere * forceMult * Random.Range(forceMin, forceMax), ForceMode.Impulse);
         }
     }
 }

@@ -683,7 +683,7 @@ MonoBehaviour:
   m_Script: {fileID: -1971194244, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 1333287932417597, guid: 866c56d97c8af0f42a46bfd17fd3d3f0, type: 3}
+  itemPrefab: {fileID: 1083546021707398, guid: 866c56d97c8af0f42a46bfd17fd3d3f0, type: 3}
 --- !u!114 &114149213659417492
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -883,6 +883,7 @@ MonoBehaviour:
   isCart: 0
   fragilityMultiplier: 1
   impactFragilityMultiplier: 1
+  centerPointNeedsToBeInsideCart: 0
 --- !u!54 &54967312641844739
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1070,9 +1071,15 @@ MonoBehaviour:
   enemyHitTorque: 0.1
   enemyRayCast: 0
   enemyHitTriggers: 0
+  deathPit: 0
   hitSpread: 180
   ignoreObjects:
   - {fileID: 114350011559814635}
+  hasTimer: 0
+  timer: 0.2
+  destroyOnTimerEnd: 0
+  hasCustomRaycastPosition: 0
+  customRaycastPosition: {x: 0, y: 0, z: 0}
   onImpactAny:
     m_PersistentCalls:
       m_Calls: []

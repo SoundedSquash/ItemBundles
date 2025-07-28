@@ -1571,6 +1571,7 @@ MonoBehaviour:
   isCart: 0
   fragilityMultiplier: 1
   impactFragilityMultiplier: 1
+  centerPointNeedsToBeInsideCart: 0
 --- !u!54 &54445723224293440
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1669,7 +1670,7 @@ MonoBehaviour:
   m_Script: {fileID: -1971194244, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 1798269206411377, guid: 738b85ab71cc0564aa7a6e94170dfc66, type: 3}
+  itemPrefab: {fileID: 1549478775285356, guid: 738b85ab71cc0564aa7a6e94170dfc66, type: 3}
 --- !u!1 &1890972477415860
 GameObject:
   m_ObjectHideFlags: 0
@@ -1698,7 +1699,7 @@ Transform:
   m_GameObject: {fileID: 1890972477415860}
   serializedVersion: 2
   m_LocalRotation: {x: 0.2174525, y: -0.18866372, z: 0.042908423, w: 0.95670235}
-  m_LocalPosition: {x: 0.36036587, y: 0.4365641, z: -0.8702395}
+  m_LocalPosition: {x: 0.382, y: 0.576, z: -0.924}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

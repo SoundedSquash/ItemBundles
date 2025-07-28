@@ -36,6 +36,7 @@ namespace ItemBundles
 
         /// <summary>
         /// Patch that prevents generated 'prefabs' from spamming NRE errors in the console
+        /// For Future/better patching: Caused by missed dict entry in StatsManager because it runs before the dicts get populated
         /// </summary>
         /// <param name="__instance"></param>
         /// <returns></returns>

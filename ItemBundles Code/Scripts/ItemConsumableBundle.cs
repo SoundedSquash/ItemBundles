@@ -70,7 +70,6 @@ namespace ItemBundles
                     offsetMult = 0f; 
                     break;
             }
-            float velMult = 2.5f;
 
             if (!SemiFunc.IsMultiplayer())
             {
@@ -84,7 +83,7 @@ namespace ItemBundles
                     }
 
                     var obj = Object.Instantiate(itemPrefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
-                    obj.GetComponent<Rigidbody>().AddForce(randomSpawnOffset * velMult, ForceMode.Impulse);
+                    obj.AddComponent<ItemLateImpulse>();
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
                 }
             }
@@ -100,14 +99,10 @@ namespace ItemBundles
                     }
 
                     GameObject obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
-                    obj.GetComponent<Rigidbody>().AddForce(randomSpawnOffset * velMult, ForceMode.Impulse);
+                    obj.AddComponent<ItemLateImpulse>();
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
                 }
             }
-
-            //particleScriptExplosion.Spawn(base.transform.position, 0.8f, 50, 100, 4f, onlyParticleEffect: false, disableSound: true);
-            //soundExplosion.Play(base.transform.position);
-            //soundExplosionGlobal.Play(base.transform.position);
         }
     }
 }

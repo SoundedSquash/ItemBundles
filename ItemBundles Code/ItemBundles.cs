@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace ItemBundles
 {
-    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.4.0")]
+    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.4.1")]
     [BepInDependency(REPOLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("nickklmao.repoconfig", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("bulletbot.moreupgrades", BepInDependency.DependencyFlags.SoftDependency)]
