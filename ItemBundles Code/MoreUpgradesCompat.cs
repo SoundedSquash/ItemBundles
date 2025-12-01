@@ -15,7 +15,8 @@ namespace ItemBundles
             {
                 if (_enabled == null)
                 {
-                    _enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.moreupgrades");
+                    //_enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.moreupgrades");
+                    _enabled = false;
                 }
                 return (bool)_enabled;
             }
@@ -35,7 +36,7 @@ namespace ItemBundles
                 DebugLogger.LogInfo($"MoreUpgradesCompat: Init {upgradeItem}, {item}");
 
                 if (!item) continue;
-                if (!item.prefab) continue;
+                if (!item.prefab.Prefab) continue;
 
                 allUpgrades.Add(item);
             }

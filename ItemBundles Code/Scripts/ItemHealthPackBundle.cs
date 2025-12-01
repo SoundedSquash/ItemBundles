@@ -142,7 +142,7 @@ namespace ItemBundles
                 DebugLogger.LogInfo($"{healEntry.Key.playerName} missing {healEntry.Key.playerHealth.maxHealth - healEntry.Key.playerHealth.health} health, healing for {healAmount} base + {healEntry.Value - healAmount} excess!", true);
                 healEntry.Key.playerHealth.HealOther(healEntry.Value, effect: true);
             }
-            _ = StatsManager.instance.itemsPurchased[itemAttributes.item.itemAssetName];
+            _ = StatsManager.instance.itemsPurchased[itemAttributes.item.prefab.prefabName];
             StatsManager.instance.ItemRemove(itemAttributes.instanceName);
 
             physGrabObject.impactDetector.destroyDisable = false;
@@ -191,7 +191,7 @@ namespace ItemBundles
             PlayerAvatar playerAvatar = SemiFunc.PlayerAvatarGetFromPhotonID(itemToggle.playerTogglePhotonID);
             if (playerAvatar.isLocal)
             {
-                playerAvatar.physGrabber.ReleaseObjectRPC(physGrabEnded: false, 1f);
+                playerAvatar.physGrabber.ReleaseObjectRPC(physGrabEnded: false, 1f, this.photonView.ViewID);
             }
             ParticleSystem[] array = rejectParticles;
             for (int i = 0; i < array.Length; i++)

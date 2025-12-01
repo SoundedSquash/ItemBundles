@@ -16,7 +16,7 @@ namespace ItemBundles
         [HarmonyPostfix, HarmonyPatch(nameof(StatsManager.Start))]
         public static void Start_Postfix(StatsManager __instance)
         {
-            ItemBundles.Instance.InitializeItemBundles();
+            REPOLib.BundleLoader.OnAllBundlesLoaded += ItemBundles.Instance.InitializeItemBundles;
         }
     }
 
@@ -75,6 +75,7 @@ namespace ItemBundles
                         var upgradeIncreaseMult = ShopManager.instance.upgradeValueIncrease;
 
                         // Try to get configs for MoreUpgrade item bundles
+                        /*
                         if (bundleAssetName.Contains("Modded") && MoreUpgradesCompat.enabled)
                         {
                             mult = MoreUpgradesCompat.GetItemValueMultiplier(mult, bundleAssetName);
@@ -85,6 +86,7 @@ namespace ItemBundles
                         {
                             upgradeIncreaseMult = VanillaUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
                         }
+                        */
 
                         float num = UnityEngine.Random.Range(__instance.itemValueMin, __instance.itemValueMax) * mult;
                         num = Mathf.Max(num, 1000f);
@@ -311,12 +313,12 @@ namespace ItemBundles
 
                 // Cant replace with a bundle if we don't have an entry at all
                 //TODO Add minimum number
-                if (ItemBundles.Instance.itemBundleInfos.ContainsKey(item.itemAssetName))
+                if (ItemBundles.Instance.itemBundleInfos.ContainsKey(item.prefab.prefabName))
                 {
                     var itemTypeBundleInfo = ItemBundles.Instance.itemTypeBundleInfos[item.itemType];
-                    var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.itemAssetName];
+                    var itemBundleInfo = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName];
 
-                    if (!itemBundleInfo.bundleItem.prefab)
+                    if (!itemBundleInfo.bundleItem.prefab.Prefab)
                     {
                         DebugLogger.LogInfo($"{itemBundleInfo.bundleItem} prefab was null! Skipping entry", true);
                         continue;
@@ -328,7 +330,7 @@ namespace ItemBundles
                     bool maxMet = BundleHelper.GetItemBundleMax(item) == 0;
                     if (maxMet)
                     {
-                        DebugLogger.LogWarning($"-{num}- Already have max bundles for {item.itemAssetName}!", true);
+                        DebugLogger.LogWarning($"-{num}- Already have max bundles for {item.prefab.prefabName}!", true);
                         continue;
                     }
 

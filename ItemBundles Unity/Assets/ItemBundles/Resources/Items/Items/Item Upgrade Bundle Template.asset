@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Upgrade Bundle Template
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Upgrade Generated Bundle
   itemName: Upgrades
   description: 
   itemType: 3
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 6
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 0d9a3e51e7f7904499722ff95b5f00b3, type: 2}
-  prefab: {fileID: 1310192160991527, guid: c7fded7b1dfc2c845884a867379813d1, type: 3}
+  prefab:
+    prefabName: Item Upgrade Bundle Template
+    resourcePath: Items/Item Upgrade Bundle Template
   value: {fileID: 11400000, guid: c821c96708bba394bb1fccfc21ae8a45, type: 2}
   maxAmount: 1
   maxAmountInShop: 1

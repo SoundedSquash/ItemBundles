@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Grenade Stun Bundle
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Grenade Stun Bundle
   itemName: Stun Grenades
   description: 
   itemType: 6
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 1
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 0d9a3e51e7f7904499722ff95b5f00b3, type: 2}
-  prefab: {fileID: 1778844382407427, guid: 9a8190bc6306d2e4fb065a14c70eb931, type: 3}
+  prefab:
+    prefabName: Item Grenade Stun Bundle
+    resourcePath: Items/Item Grenade Stun Bundle
   value: {fileID: 11400000, guid: e16e2eb829b4340458e5110154731684, type: 2}
   maxAmount: 1
   maxAmountInShop: 1

@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Health Pack Medium Bundle
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Health Pack Medium Bundle
   itemName: Medium Health Packs (50)
   description: 
   itemType: 8
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 7
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 6df9cbffe1ad6964b9689f632f621b62, type: 2}
-  prefab: {fileID: 1092777652418985, guid: 3c7aa2fb431a4484892952fa3badb87d, type: 3}
+  prefab:
+    prefabName: Item Health Pack Medium Bundle
+    resourcePath: Items/Item Health Pack Medium Bundle
   value: {fileID: 11400000, guid: 28b610b9c74697b4487a6470a89751d3, type: 2}
   maxAmount: 3
   maxAmountInShop: 1

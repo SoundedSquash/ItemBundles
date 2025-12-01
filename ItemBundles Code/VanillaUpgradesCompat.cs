@@ -14,7 +14,8 @@ namespace ItemBundles
             {
                 if (_enabled == null)
                 {
-                    _enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.vanillaupgrades");
+                    //_enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.vanillaupgrades");
+                    _enabled = false;
                 }
                 return (bool)_enabled;
             }

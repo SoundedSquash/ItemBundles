@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Mine Stun Bundle
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Mine Stun Bundle
   itemName: Trapzaps
   description: 
   itemType: 11
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 1
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 0d9a3e51e7f7904499722ff95b5f00b3, type: 2}
-  prefab: {fileID: 1333287932417597, guid: 5e86d5814965e164eb56ef1b4c5a27c6, type: 3}
+  prefab:
+    prefabName: Item Mine Stun Bundle
+    resourcePath: Items/Item Mine Stun Bundle
   value: {fileID: 11400000, guid: e16e2eb829b4340458e5110154731684, type: 2}
   maxAmount: 1
   maxAmountInShop: 1

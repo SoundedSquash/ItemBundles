@@ -84,7 +84,7 @@ namespace ItemBundles
 
                     var obj = Object.Instantiate(itemPrefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
                     obj.AddComponent<ItemLateImpulse>();
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
                 }
             }
             else if (SemiFunc.IsMasterClient())
@@ -100,7 +100,7 @@ namespace ItemBundles
 
                     GameObject obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
                     obj.AddComponent<ItemLateImpulse>();
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
                 }
             }
         }

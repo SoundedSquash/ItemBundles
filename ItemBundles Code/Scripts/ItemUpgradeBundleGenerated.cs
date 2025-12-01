@@ -4,12 +4,14 @@ using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine;
 using static SemiFunc;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 namespace ItemBundles
 {
     public class ItemUpgradeBundleGenerated : MonoBehaviour
     {
         private ItemToggle itemToggle;
+        private bool used;
 
         private PhotonTransformView photonTransformView;
         private PhysGrabObjectImpactDetector impactDetector;
@@ -74,6 +76,30 @@ namespace ItemBundles
             DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
         }
 
+        private void Update()
+        {
+            if (SemiFunc.RunIsShop())
+            {
+                return;
+            }
+
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used)
+            {
+                return;
+            }
+
+            if (!used && itemToggle.toggleState)
+            {
+                SpawnItems();
+
+                StatsManager.instance.ItemRemove(this.GetComponent<ItemAttributes>().instanceName);
+
+                impactDetector.destroyDisable = false;
+                impactDetector.DestroyObject(effects: false);
+                used = true;
+            }
+        }
+
         public void SpawnItems()
         {
             var playerCount = SemiFunc.PlayerGetAll().Count;
@@ -86,16 +112,16 @@ namespace ItemBundles
 
                 if ( !SemiFunc.IsMultiplayer() )
                 {
-                    var obj = Object.Instantiate(originalItem.prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
-                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    var obj = Object.Instantiate(originalItem.prefab.Prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
+                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
 
                 }
                 if ( SemiFunc.IsMasterClient() )
                 {
-                    GameObject obj = PhotonNetwork.Instantiate("Items/" + originalItem.prefab.name, base.transform.position + spawnOffset, gameObject.transform.rotation);
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.itemAssetName);
-                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.itemAssetName);
+                    GameObject obj = PhotonNetwork.Instantiate(originalItem.prefab.resourcePath, base.transform.position + spawnOffset, gameObject.transform.rotation);
+                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
                 }
             }
         }
@@ -121,7 +147,7 @@ namespace ItemBundles
 
             Material? mat = null;
 
-            var mesh = obj.prefab.transform.Find("Mesh");
+            var mesh = obj.prefab.Prefab.transform.Find("Mesh");
             var meshR = mesh.GetComponent<MeshRenderer>();
             if (meshR)
             {
@@ -130,7 +156,7 @@ namespace ItemBundles
 
             if (!mat)
             {
-                DebugLogger.LogError($"- GetBoxMat {originalItem.itemAssetName} failed, returning NULL", true);
+                DebugLogger.LogError($"- GetBoxMat {originalItem.prefab.prefabName} failed, returning NULL", true);
             }
             else
             {
@@ -150,7 +176,7 @@ namespace ItemBundles
             Item obj = originalItem;
             if ( !obj ) return null;
 
-            var lightObj = obj.prefab.transform.Find("Light - Small Lamp");
+            var lightObj = obj.prefab.Prefab.transform.Find("Light - Small Lamp");
             if ( !lightObj ) return null;
 
             var light = lightObj.GetComponent<Light>();

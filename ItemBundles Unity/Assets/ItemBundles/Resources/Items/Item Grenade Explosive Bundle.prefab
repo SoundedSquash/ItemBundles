@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: -1971194244, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 1653486645688203, guid: f5dc99815a0490e428d5fc9f21540268, type: 3}
+  itemPrefab: {fileID: 1896273014024165, guid: f5dc99815a0490e428d5fc9f21540268, type: 3}
 --- !u!114 &114193314177864012
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -378,6 +378,9 @@ MonoBehaviour:
   toggleState: 0
   playSound: 0
   autoTurnOffWhenEquipped: 1
+  onToggle:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!82 &82489936019410960
 AudioSource:
   m_ObjectHideFlags: 0

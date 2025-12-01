@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Grenade Explosive Bundle
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Grenade Explosive Bundle
   itemName: Grenades
   description: 
   itemType: 6
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 1
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 0d9a3e51e7f7904499722ff95b5f00b3, type: 2}
-  prefab: {fileID: 1328914154634440, guid: 3518abd910ec77c4abc6e2d2c6bbf555, type: 3}
+  prefab:
+    prefabName: Item Grenade Explosive Bundle
+    resourcePath: Items/Item Grenade Explosive Bundle
   value: {fileID: 11400000, guid: e16e2eb829b4340458e5110154731684, type: 2}
   maxAmount: 1
   maxAmountInShop: 1

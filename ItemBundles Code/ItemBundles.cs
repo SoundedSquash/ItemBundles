@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using Photon.Pun;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -84,6 +85,9 @@ namespace ItemBundles
             manager.hideFlags = HideFlags.HideAndDontSave;
             DontDestroyOnLoad(manager);
 
+            // Disabled until further testing can be done
+            // MoreUpgrades and VanillaUpgrades have been overhauled since REPOLib 3.0
+            /*
             if ( MoreUpgradesCompat.enabled )
             {
                 MoreUpgradesCompat.InitCompat();
@@ -94,6 +98,7 @@ namespace ItemBundles
                 VanillaUpgradesCompat.InitCompat();
                 DebugLogger.LogInfo($"VanillaUpgradesCompat has loaded!", true);
             }
+            */
 
             RegisterItemBundles();
 
@@ -124,7 +129,7 @@ namespace ItemBundles
 
             // Start dynamic upgrade bundle prefab generation here
             var templateBundleItem = assetBundle.LoadAsset<Item>("Item Upgrade Bundle Template");
-            templateUpgradeBundlePrefab = templateBundleItem.prefab;
+            templateUpgradeBundlePrefab = assetBundle.LoadAsset<GameObject>("Item Upgrade Bundle Template");
 
             if (!templateBundleItem || !templateUpgradeBundlePrefab)
             {
@@ -142,38 +147,36 @@ namespace ItemBundles
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
-                if (!upgradeItem) continue;
-                if (!upgradeItem.prefab) continue;
+                if (!upgradeItem || !upgradeItem.prefab.Prefab ) continue;
 
                 allUpgradesREPOLib.Add(upgradeItem);
                 allUpgrades.Add(upgradeItem);
             }
 
+            // Disabled until further testing can be done
+            // MoreUpgrades and VanillaUpgrades have been overhauled since REPOLib 3.0
+            /*
             if ( MoreUpgradesCompat.enabled )
             {
                 allUpgrades.AddRange(MoreUpgradesCompat.allUpgrades);
             }
-            
+            */
+            foreach (Item upgradeItem in allUpgradesVanilla)
+            {
+                DebugLogger.LogInfo($"allUpgradesVanilla: {upgradeItem.itemName}", true);
+            }
+
+            foreach (Item upgradeItem in allUpgradesREPOLib)
+            {
+                DebugLogger.LogInfo($"allUpgradesREPOLib: {upgradeItem.itemName}", true);
+            }
+
             upgradeBundleMeshes = assetBundle.LoadAllAssets<Mesh>().Where(mesh => mesh.name.ToLower().Contains("mesh_bundle_upgrade")).ToList();
             foreach (Item upgradeItem in allUpgrades)
             {
-                // Plan to have for having predetermined or otherwise unique prefabs
-                // Currently unsure how to check assetpath within assetbundle
-                // if ( ValidateExistingBundle(upgrade) ) continue;
-
+                // TODO: add support for pre-existing Upgrade Bundles, for custom behaviour or visuals
                 GenerateUpgradeBundle(upgradeItem);
             }
-        }
-
-        public bool ValidateExistingBundle(Item upgradeItem)
-        {
-            //var assetPath = "Assets/ItemBundles/Resources/Unused/Items/Items/";
-            Item bundleItem = assetBundle.LoadAsset<Item>(upgradeItem.itemAssetName + " Bundle.asset");
-            if (!bundleItem) return false;
-            if (!bundleItem.prefab) return false;
-
-            REPOLib.Modules.Items.RegisterItem(bundleItem);
-            return true;
         }
 
         public void GenerateUpgradeBundle( Item baseItem )
@@ -185,14 +188,12 @@ namespace ItemBundles
 
             newBundlePrefab.name = baseItem.name + " Bundle";
             newBundleItem.name = baseItem.name + " Bundle";
-            newBundleItem.itemAssetName = baseItem.itemAssetName + " Bundle";
             newBundleItem.itemName = baseItem.itemName + "s";
             newBundleItem.itemType = baseItem.itemType;
             newBundleItem.emojiIcon = baseItem.emojiIcon;
             newBundleItem.itemVolume = baseItem.itemVolume;
             newBundleItem.itemSecretShopType = baseItem.itemSecretShopType;
             newBundleItem.colorPreset = baseItem.colorPreset;
-            newBundleItem.prefab = newBundlePrefab;
             newBundleItem.value = baseItem.value;
             newBundleItem.maxAmount = baseItem.maxAmount;
             newBundleItem.maxAmountInShop = baseItem.maxAmountInShop;
@@ -200,6 +201,20 @@ namespace ItemBundles
             newBundleItem.maxPurchaseAmount = baseItem.maxPurchaseAmount;
             newBundleItem.spawnRotationOffset = baseItem.spawnRotationOffset;
             newBundleItem.physicalItem = baseItem.physicalItem;
+
+            var newPrefabRefName = baseItem.prefab.prefabName + " Bundle";
+            var newBundlePrefabRef = new PrefabRef
+            {
+                prefabName = newPrefabRefName,
+                resourcePath = "Items/" + newPrefabRefName
+            };
+
+            // Add prefab to new pools
+            //RunManager.instance.singleplayerPool.Add("Items/" + newPrefabRefName, newBundlePrefab);
+            //RunManager.instance.multiplayerPool.ResourceCache.Add("Items/" + newPrefabRefName, newBundlePrefab);
+
+            // Assign prefab ref
+            newBundleItem.prefab = newBundlePrefabRef;
 
             var itemComp = newBundlePrefab.GetComponent<ItemAttributes>();
             itemComp.item = newBundleItem;
@@ -210,7 +225,7 @@ namespace ItemBundles
             var randMeshIndex = Random.RandomRangeInt(0, upgradeBundleMeshes.Count);
             bundleComp.SetBoxMesh(upgradeBundleMeshes[randMeshIndex]);
 
-            REPOLib.Modules.Items.RegisterItem(newBundleItem);
+            REPOLib.Modules.Items.RegisterItem(itemComp);
             generatedBundles[newBundleItem] = newBundlePrefab;
         }
 
@@ -239,8 +254,10 @@ namespace ItemBundles
             {
                 // AFAIK not currently possible to determine origin mod for REPOLib upgrades
                 var configPrefix = "";
-                var bundleComp = item.prefab.GetComponent<ItemUpgradeBundleGenerated>();
+                var bundleComp = item.prefab.Prefab.GetComponent<ItemUpgradeBundleGenerated>();
                 if (!allUpgradesVanilla.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
+
+                /*
                 if ( MoreUpgradesCompat.enabled )
                 {
                     if (MoreUpgradesCompat.allUpgrades.Contains(bundleComp.originalItem))
@@ -248,6 +265,7 @@ namespace ItemBundles
                         configPrefix = "MoreUpgrades ";
                     }
                 }
+                */
 
                 InitializeBundle(item, configPrefix);
             }
@@ -297,14 +315,15 @@ namespace ItemBundles
 
         internal void RegisterBundleItemRepoLib(string itemString)
         {
-            Item item = assetBundle.LoadAsset<Item>(itemString);
-            if (!item)
+            DebugLogger.LogWarning($"RegisterBundleItemRepoLib() Trying Item {itemString}", true);
+            GameObject item = assetBundle.LoadAsset<GameObject>(itemString);
+            ItemAttributes itemAttributes = item.GetComponent<ItemAttributes>();
+            if ( !itemAttributes )
             {
-                DebugLogger.LogError($"RegisterBundleItemRepoLib() Failed: Item {itemString} not found!");
+                DebugLogger.LogError($"RegisterBundleItemRepoLib() Failed: ItemAttributes for {itemString} was null!");
                 return;
             }
-
-            REPOLib.Modules.Items.RegisterItem(item);
+            REPOLib.Modules.Items.RegisterItem(itemAttributes);
         }
 
         internal void InitializeBundle( string bundleItemString, string configSectionPrefix = "")
@@ -329,11 +348,13 @@ namespace ItemBundles
             }
 
             var bundleString = " Bundle";
+            /*
             if (!item.itemAssetName.Contains(bundleString))
             {
                 DebugLogger.LogError($"InitializeBundle() Failed: Item {item.itemAssetName} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
                 return;
             }
+            */
 
             var originalItemString = BundleHelper.GetItemStringFromBundle(bundleItem);
             var originalItem = StatsManager.instance.itemDictionary[originalItemString];
@@ -349,7 +370,7 @@ namespace ItemBundles
                 DebugLogger.LogWarning($"InitializeBundle() Warning: bundleStringPairs {originalItemString} already has an entry {itemBundleInfos[originalItemString]}, we are overriding something!");
             }
 
-            itemDictionaryShopBlacklist.Add(bundleItem.itemAssetName, bundleItem);
+            itemDictionaryShopBlacklist.Add(bundleItem.prefab.resourcePath, bundleItem);
 
             // FAILSAFE: Update bundle upgrade prices to match original upgrades
             if (bundleItem.itemType == SemiFunc.itemType.item_upgrade)
@@ -374,7 +395,7 @@ namespace ItemBundles
             }
 
             itemBundleInfos[originalItemString] = bundleInfo;
-            DebugLogger.LogInfo($"InitializeBundle() Debug: Added bundleInfo {{ {originalItemString} | {bundleItem.itemAssetName} }}", true);
+            DebugLogger.LogInfo($"InitializeBundle() Debug: Added bundleInfo {{ {originalItemString} | {bundleItem.prefab.prefabName} }}", true);
 
         }
 

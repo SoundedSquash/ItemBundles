@@ -683,7 +683,7 @@ MonoBehaviour:
   m_Script: {fileID: -1971194244, guid: 1230a685f06d3a44dbc71883508f73d2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemPrefab: {fileID: 1083546021707398, guid: 866c56d97c8af0f42a46bfd17fd3d3f0, type: 3}
+  itemPrefab: {fileID: 1697852002070987, guid: 866c56d97c8af0f42a46bfd17fd3d3f0, type: 3}
 --- !u!114 &114149213659417492
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -970,6 +970,9 @@ MonoBehaviour:
   toggleState: 0
   playSound: 1
   autoTurnOffWhenEquipped: 1
+  onToggle:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &1358432303754352
 GameObject:
   m_ObjectHideFlags: 0
@@ -1048,10 +1051,12 @@ MonoBehaviour:
   playerTumbleTime: 2
   playerTumbleImpactHurtTime: 0
   playerTumbleImpactHurtDamage: 0
+  playerTumbleEnemyHurtDisableTime: 0
   physLogic: 0
   physDestroy: 0
   physHingeDestroy: 0
   physHingeBreak: 0
+  physReleaseGrab: 0
   physImpact: 0
   physDamageCooldown: 0.5
   physHitForce: 5

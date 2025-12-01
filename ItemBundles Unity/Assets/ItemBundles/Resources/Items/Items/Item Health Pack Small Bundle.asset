@@ -13,7 +13,6 @@ MonoBehaviour:
   m_Name: Item Health Pack Small Bundle
   m_EditorClassIdentifier: 
   disabled: 0
-  itemAssetName: Item Health Pack Small Bundle
   itemName: Small Health Packs (25)
   description: 
   itemType: 8
@@ -21,7 +20,9 @@ MonoBehaviour:
   itemVolume: 7
   itemSecretShopType: 0
   colorPreset: {fileID: 11400000, guid: 6df9cbffe1ad6964b9689f632f621b62, type: 2}
-  prefab: {fileID: 1540010371511003, guid: ac541f57fa7b10e44a9a6ec78827df43, type: 3}
+  prefab:
+    prefabName: Item Health Pack Small Bundle
+    resourcePath: Items/Item Health Pack Small Bundle
   value: {fileID: 11400000, guid: ed19220757f12af4294cd17752dcd4ba, type: 2}
   maxAmount: 3
   maxAmountInShop: 1

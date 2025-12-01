@@ -8,9 +8,9 @@ namespace ItemBundles
         public static int GetItemBundleChance(Item item)
         {
             var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].chanceInShop;
-            if (ItemBundles.Instance.itemBundleInfos[item.itemAssetName].chanceInShop >= 0)
+            if (ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].chanceInShop >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].chanceInShop;
+                output = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].chanceInShop;
             }
 
             return output;
@@ -19,9 +19,9 @@ namespace ItemBundles
         public static int GetItemBundleMax(Item item)
         {
             var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].maxInShop;
-            if (ItemBundles.Instance.itemBundleInfos[item.itemAssetName].maxInShop >= 0)
+            if (ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].maxInShop >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].maxInShop;
+                output = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].maxInShop;
             }
 
             return output;
@@ -34,9 +34,9 @@ namespace ItemBundles
             {
                 output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value;
             }
-            if ( ItemBundles.Instance.itemBundleInfos[item.itemAssetName].config_minPerBundle.Value >= 0)
+            if ( ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemBundleInfos[item.itemAssetName].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].config_minPerBundle.Value;
             }
 
             return output;
@@ -74,7 +74,7 @@ namespace ItemBundles
 
         public static string GetItemStringFromBundle( Item bundleItem )
         {
-            string bundleItemString = bundleItem.itemAssetName;
+            string bundleItemString = bundleItem.prefab.prefabName;
             return GetItemStringFromBundle( bundleItemString );
         }
 
