@@ -49,9 +49,9 @@ namespace ItemBundles
         public void SpawnItems()
         {
             //TODO: Adjust item spacing more dynamically
-            var playerCount = SemiFunc.PlayerGetAll().Count;
+            var playerCount = SemiFunc.PlayerGetAll().Count + ItemBundles.Instance.config_debugFakePlayers.Value;
 
-            var item = GetComponent<ItemAttributes>().item;
+            Item item = GetComponent<ItemAttributes>().item;
             if (item.itemType == itemType.grenade || item.itemType == itemType.mine)
             {
                 playerCount = Mathf.Max(playerCount, BundleHelper.GetItemBundleMinItem(BundleHelper.GetItemStringFromBundle(item), item.itemType));
@@ -71,16 +71,32 @@ namespace ItemBundles
                     break;
             }
 
+            for (int i = 0; i < playerCount; i++)
+            {
+                GameObject? obj = null;
+                Vector3 randomSpawnOffset = i == 0 ? Vector3.zero : Random.insideUnitSphere * offsetMult;
+
+                if (!SemiFunc.IsMultiplayer())
+                {
+                    obj = Object.Instantiate(itemPrefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
+                }
+                else if (SemiFunc.IsMasterClient())
+                {
+                    obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
+                }
+
+                if ( obj == null ) return;
+
+                obj.AddComponent<ItemLateImpulse>();
+                StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+            }
+            
+            /* Old Code, remove after one revision
             if (!SemiFunc.IsMultiplayer())
             {
-                for (int i = 0; i < (playerCount + ItemBundles.Instance.config_debugFakePlayers.Value); i++)
+                for (int i = 0; i < playerCount; i++)
                 {
-                    //Makes first item spawn in hand
-                    var randomSpawnOffset = Vector3.zero;
-                    if (i != 0)
-                    {
-                        randomSpawnOffset = Random.insideUnitSphere * offsetMult;
-                    }
+                    Vector3 randomSpawnOffset = i == 0 ? Vector3.zero : Random.insideUnitSphere * offsetMult;
 
                     var obj = Object.Instantiate(itemPrefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
                     obj.AddComponent<ItemLateImpulse>();
@@ -89,20 +105,16 @@ namespace ItemBundles
             }
             else if (SemiFunc.IsMasterClient())
             {
-                for (int j = 0; j < (playerCount + ItemBundles.Instance.config_debugFakePlayers.Value); j++)
+                for (int j = 0; j < playerCount; j++)
                 {
-                    //Makes first item spawn in hand
-                    var randomSpawnOffset = Vector3.zero;
-                    if ( j != 0 )
-                    {
-                        randomSpawnOffset = Random.insideUnitSphere * offsetMult;
-                    }
+                    Vector3 randomSpawnOffset = j == 0 ? Vector3.zero : Random.insideUnitSphere * offsetMult;
 
                     GameObject obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
                     obj.AddComponent<ItemLateImpulse>();
                     StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
                 }
             }
+            */
         }
     }
 }

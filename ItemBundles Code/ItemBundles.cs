@@ -1,16 +1,14 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using Photon.Pun;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Unity.VisualScripting;
 using UnityEngine;
 
 namespace ItemBundles
 {
-    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.4.1")]
+    [BepInPlugin("SeroRonin.ItemBundles", "ItemBundles", "1.5.0")]
     [BepInDependency(REPOLib.MyPluginInfo.PLUGIN_GUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("nickklmao.repoconfig", BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency("bulletbot.moreupgrades", BepInDependency.DependencyFlags.SoftDependency)]
@@ -141,13 +139,13 @@ namespace ItemBundles
             allUpgradesVanilla.Clear();
             allUpgrades.Clear();
 
-            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.name.ToLower().Contains("upgrade") && item.name.ToLower().Contains("player") && item.prefab != null).ToList();
+            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.itemType == SemiFunc.itemType.player_upgrade).ToList();
             allUpgrades = new List<Item>(allUpgradesVanilla);
 
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
-                if (!upgradeItem || !upgradeItem.prefab.Prefab ) continue;
+                if (upgradeItem == null || upgradeItem?.prefab.Prefab == null) continue;
 
                 allUpgradesREPOLib.Add(upgradeItem);
                 allUpgrades.Add(upgradeItem);
@@ -252,20 +250,12 @@ namespace ItemBundles
 
             foreach ( Item item in generatedBundles.Keys )
             {
+                // Originally meant to prepend mod name to config section for organization
                 // AFAIK not currently possible to determine origin mod for REPOLib upgrades
                 var configPrefix = "";
                 var bundleComp = item.prefab.Prefab.GetComponent<ItemUpgradeBundleGenerated>();
+                if (bundleComp == null) continue;
                 if (!allUpgradesVanilla.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
-
-                /*
-                if ( MoreUpgradesCompat.enabled )
-                {
-                    if (MoreUpgradesCompat.allUpgrades.Contains(bundleComp.originalItem))
-                    {
-                        configPrefix = "MoreUpgrades ";
-                    }
-                }
-                */
 
                 InitializeBundle(item, configPrefix);
             }
@@ -348,13 +338,11 @@ namespace ItemBundles
             }
 
             var bundleString = " Bundle";
-            /*
-            if (!item.itemAssetName.Contains(bundleString))
+            if (!item.name.Contains(bundleString))
             {
-                DebugLogger.LogError($"InitializeBundle() Failed: Item {item.itemAssetName} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
+                DebugLogger.LogError($"InitializeBundle() Failed: Item {item.name} is not a bundle! Add \" Bundle\" to item name (WITH THE SPACE)");
                 return;
             }
-            */
 
             var originalItemString = BundleHelper.GetItemStringFromBundle(bundleItem);
             var originalItem = StatsManager.instance.itemDictionary[originalItemString];

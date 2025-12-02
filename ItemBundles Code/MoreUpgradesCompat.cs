@@ -1,7 +1,6 @@
 ﻿using MoreUpgrades.Classes;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace ItemBundles
 {
@@ -15,45 +14,26 @@ namespace ItemBundles
             {
                 if (_enabled == null)
                 {
-                    //_enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.moreupgrades");
-                    _enabled = false;
+                    _enabled = BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("bulletbot.moreupgrades");
                 }
                 return (bool)_enabled;
             }
         }
 
-        public static List<Item> allUpgrades = new List<Item>();
-
-        public static void InitCompat()
+        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+        public static float GetOriginalValueMultiplier(string bundleAssetName)
         {
-            var pluginInstance = MoreUpgrades.Plugin.instance;
-
-            allUpgrades.Clear();
-
-            foreach (UpgradeItem upgradeItem in pluginInstance.upgradeItems)
-            {
-                var item = pluginInstance.assetBundle.LoadAsset<Item>(upgradeItem.name);
-                DebugLogger.LogInfo($"MoreUpgradesCompat: Init {upgradeItem}, {item}");
-
-                if (!item) continue;
-                if (!item.prefab.Prefab) continue;
-
-                allUpgrades.Add(item);
-            }
+            var originalItemName = BundleHelper.GetItemStringFromBundle(bundleAssetName);
+            var originalItem = StatsManager.instance.itemDictionary[originalItemName];
+            return MoreUpgradesAPI.ItemValueMultiplier(originalItem);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static float GetItemValueMultiplier( float fallbackMult, string bundleAssetName)
+        public static float GetUpgradeValueIncrease(string bundleAssetName)
         {
-            var itemAssetName = BundleHelper.GetItemStringFromBundle(bundleAssetName);
-            return MoreUpgrades.Plugin.ItemValueMultiplier(fallbackMult, itemAssetName);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        public static float GetUpgradeValueIncrease(float fallbackMult, string bundleAssetName)
-        {
-            var itemAssetName = BundleHelper.GetItemStringFromBundle(bundleAssetName);
-            return MoreUpgrades.Plugin.UpgradeValueIncrease(fallbackMult, itemAssetName); ;
+            var originalItemName = BundleHelper.GetItemStringFromBundle(bundleAssetName);
+            var originalItem = StatsManager.instance.itemDictionary[originalItemName];
+            return MoreUpgradesAPI.UpgradeValueIncrease(originalItem);
         }
     }
 }

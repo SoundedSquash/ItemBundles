@@ -75,12 +75,13 @@ namespace ItemBundles
                         var upgradeIncreaseMult = ShopManager.instance.upgradeValueIncrease;
 
                         // Try to get configs for MoreUpgrade item bundles
-                        /*
                         if (bundleAssetName.Contains("Modded") && MoreUpgradesCompat.enabled)
                         {
-                            mult = MoreUpgradesCompat.GetItemValueMultiplier(mult, bundleAssetName);
-                            upgradeIncreaseMult = MoreUpgradesCompat.GetUpgradeValueIncrease(upgradeIncreaseMult, bundleAssetName);
+                            mult = MoreUpgradesCompat.GetOriginalValueMultiplier(bundleAssetName);
+                            upgradeIncreaseMult = MoreUpgradesCompat.GetUpgradeValueIncrease(bundleAssetName);
                         }
+
+                        /* Disabled until VanillaUpgrades is fixed for latest REPO
                         // Try to get config for VanillaUpgrades
                         else if (VanillaUpgradesCompat.enabled)
                         {
@@ -92,7 +93,7 @@ namespace ItemBundles
                         num = Mathf.Max(num, 1000f);
                         num = Mathf.CeilToInt(num / 1000f);
 
-                        DebugLogger.LogInfo($"base {num}, upgradeIncreaseMult {upgradeIncreaseMult}, num items {(float)StatsManager.instance.GetItemsUpgradesPurchased(BundleHelper.GetItemStringFromBundle(__instance.itemAssetName))}", true);
+                        //DebugLogger.LogInfo($"old base {__instance.value}, new base {num}, mult {mult}, upgradeIncreaseMult {upgradeIncreaseMult}, num items {(float)StatsManager.instance.GetItemsUpgradesPurchased(BundleHelper.GetItemStringFromBundle(__instance.itemAssetName))}", true);
                         num += num * upgradeIncreaseMult * (float)StatsManager.instance.GetItemsUpgradesPurchased(BundleHelper.GetItemStringFromBundle(__instance.itemAssetName));
                         currentValue = (int)num;
                     }
@@ -108,7 +109,8 @@ namespace ItemBundles
                     {
                         var priceMult = BundleHelper.GetItemBundlePriceMult(BundleHelper.GetItemStringFromBundle(__instance.item), __instance.itemType) / 100f;
                         var twoThirds = playerCount * priceMult;
-                        currentValue = Mathf.RoundToInt(currentValue * twoThirds);
+                        var finalVal = Mathf.RoundToInt(currentValue * twoThirds);
+                        currentValue = finalVal;
                     }
 
                     __instance.value = currentValue;

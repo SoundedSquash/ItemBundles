@@ -1,10 +1,6 @@
-using MoreUpgrades.Classes;
 using Photon.Pun;
 using System.Collections;
-using System.Runtime.CompilerServices;
 using UnityEngine;
-using static SemiFunc;
-using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 namespace ItemBundles
 {
@@ -17,7 +13,7 @@ namespace ItemBundles
         private PhysGrabObjectImpactDetector impactDetector;
 
         //What item should we spawn?
-        public Item originalItem;
+        public Item? originalItem;
         public bool isPrefab;
 
         private void Awake()
@@ -72,7 +68,7 @@ namespace ItemBundles
             var rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.rotation = Quaternion.identity;
-            transform.position = new Vector3(0, 5, 0);
+            transform.position = new Vector3(0, 500, 0);
             DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
         }
 
@@ -142,9 +138,8 @@ namespace ItemBundles
         /// <returns>First material with the string "upgrade" in its name</returns>
         public Material? GetOriginalBoxMat()
         {
-            Item obj = originalItem;
-            if (!obj) return null;
-
+            if (originalItem == null) return null;
+            Item? obj = originalItem;
             Material? mat = null;
 
             var mesh = obj.prefab.Prefab.transform.Find("Mesh");
@@ -173,8 +168,8 @@ namespace ItemBundles
         /// <returns> Light Component on the gameObject "Light - Small Lamp"</returns>
         public Light? GetOriginalLight()
         {
-            Item obj = originalItem;
-            if ( !obj ) return null;
+            Item? obj = originalItem;
+            if ( obj == null ) return null;
 
             var lightObj = obj.prefab.Prefab.transform.Find("Light - Small Lamp");
             if ( !lightObj ) return null;
@@ -186,7 +181,7 @@ namespace ItemBundles
         public void UpdateMaterial()
         {
             var originalMat = GetOriginalBoxMat();
-            if (!originalMat) return;
+            if (originalMat == null) return;
 
             var mesh = transform.Find("Mesh");
             var meshR = mesh.GetComponent<MeshRenderer>();

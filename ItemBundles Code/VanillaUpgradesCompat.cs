@@ -1,6 +1,4 @@
-﻿using System.Linq;
-using System.Runtime.CompilerServices;
-using VanillaUpgrades.Classes;
+﻿using System.Runtime.CompilerServices;
 
 namespace ItemBundles
 {
