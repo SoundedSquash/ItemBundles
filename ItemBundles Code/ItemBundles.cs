@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using REPOLib.Modules;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -35,9 +36,10 @@ namespace ItemBundles
         public ConfigEntry<int> config_debugFakePlayers { get; private set; }
         public ConfigEntry<bool> config_debugLogging { get; private set; }
 
-        public List<Item> allUpgradesVanilla = new List<Item>();
-        public List<Item> allUpgradesREPOLib = new List<Item>();
-        public List<Item> allUpgrades = new List<Item>();
+        //public List<Item> allUpgradesVanilla = new List<Item>();
+        //public List<Item> allUpgradesREPOLib = new List<Item>();
+        //public List<Item> allUpgrades = new List<Item>();
+        public Dictionary<Item, string> upgradeParentModDict = new Dictionary<Item, string>();
         public List<Mesh> upgradeBundleMeshes = new List<Mesh>();
 
         public bool mainMenuReached { get; set; }
@@ -98,7 +100,7 @@ namespace ItemBundles
             }
             */
 
-            RegisterItemBundles();
+            REPOLib.BundleLoader.OnAllBundlesLoaded += RegisterItemBundles;
 
             DebugLogger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
         }
@@ -136,19 +138,30 @@ namespace ItemBundles
                 return;
             }
 
-            allUpgradesVanilla.Clear();
-            allUpgrades.Clear();
-
-            allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.itemType == SemiFunc.itemType.player_upgrade).ToList();
-            allUpgrades = new List<Item>(allUpgradesVanilla);
+            List <Item> allUpgradesVanilla = Resources.LoadAll<Item>("items/items").Where(item => item.itemType == SemiFunc.itemType.item_upgrade).ToList();
+            foreach (var item in allUpgradesVanilla)
+            {
+                upgradeParentModDict.Add(item, "Vanilla");
+            }
 
             foreach (REPOLib.Modules.PlayerUpgrade upgradeEntry in REPOLib.Modules.Upgrades.PlayerUpgrades)
             {
                 var upgradeItem = upgradeEntry.Item;
                 if (upgradeItem == null || upgradeItem?.prefab.Prefab == null) continue;
 
-                allUpgradesREPOLib.Add(upgradeItem);
-                allUpgrades.Add(upgradeItem);
+                upgradeParentModDict.Add(upgradeItem, "REPOLib");
+            }
+
+            foreach (var itemKV in StatsManager.instance.itemDictionary.Where(itemKV => itemKV.Value.itemType == SemiFunc.itemType.item_upgrade).ToList())
+            {
+                Item item = itemKV.Value;
+
+                if (upgradeParentModDict.ContainsKey(item))
+                {
+                    continue;
+                }
+
+                upgradeParentModDict.Add(item, "Modded");
             }
 
             // Disabled until further testing can be done
@@ -159,6 +172,7 @@ namespace ItemBundles
                 allUpgrades.AddRange(MoreUpgradesCompat.allUpgrades);
             }
             */
+            /*
             foreach (Item upgradeItem in allUpgradesVanilla)
             {
                 DebugLogger.LogInfo($"allUpgradesVanilla: {upgradeItem.itemName}", true);
@@ -167,10 +181,15 @@ namespace ItemBundles
             foreach (Item upgradeItem in allUpgradesREPOLib)
             {
                 DebugLogger.LogInfo($"allUpgradesREPOLib: {upgradeItem.itemName}", true);
+            }*/
+
+            foreach (var itemKV in upgradeParentModDict)
+            {
+                DebugLogger.LogInfo($"|- {itemKV.Value} Upgrade found and registered for bundles: {itemKV.Key.itemName}", true);
             }
 
             upgradeBundleMeshes = assetBundle.LoadAllAssets<Mesh>().Where(mesh => mesh.name.ToLower().Contains("mesh_bundle_upgrade")).ToList();
-            foreach (Item upgradeItem in allUpgrades)
+            foreach (Item upgradeItem in upgradeParentModDict.Keys)
             {
                 // TODO: add support for pre-existing Upgrade Bundles, for custom behaviour or visuals
                 GenerateUpgradeBundle(upgradeItem);
@@ -179,7 +198,7 @@ namespace ItemBundles
 
         public void GenerateUpgradeBundle( Item baseItem )
         {
-            DebugLogger.LogInfo($"Generating Upgrade Bundle: {baseItem.name}", true);
+            DebugLogger.LogInfo($"|-- Generating Upgrade Bundle: {baseItem.name}", true);
 
             var newBundleItem = ScriptableObject.CreateInstance<Item>();
             var newBundlePrefab = GameObject.Instantiate(templateUpgradeBundlePrefab, new Vector3(0, 100, 0), Quaternion.identity);
@@ -187,7 +206,7 @@ namespace ItemBundles
             newBundlePrefab.name = baseItem.name + " Bundle";
             newBundleItem.name = baseItem.name + " Bundle";
             newBundleItem.itemName = baseItem.itemName + "s";
-            newBundleItem.itemType = baseItem.itemType;
+            newBundleItem.itemType = BundleHelper.ValidateItemType(baseItem.itemType);
             newBundleItem.emojiIcon = baseItem.emojiIcon;
             newBundleItem.itemVolume = baseItem.itemVolume;
             newBundleItem.itemSecretShopType = baseItem.itemSecretShopType;
@@ -207,11 +226,6 @@ namespace ItemBundles
                 resourcePath = "Items/" + newPrefabRefName
             };
 
-            // Add prefab to new pools
-            //RunManager.instance.singleplayerPool.Add("Items/" + newPrefabRefName, newBundlePrefab);
-            //RunManager.instance.multiplayerPool.ResourceCache.Add("Items/" + newPrefabRefName, newBundlePrefab);
-
-            // Assign prefab ref
             newBundleItem.prefab = newBundlePrefabRef;
 
             var itemComp = newBundlePrefab.GetComponent<ItemAttributes>();
@@ -236,28 +250,34 @@ namespace ItemBundles
                 return;
             }
 
-            InitializeBundle("Item Health Pack Small Bundle");
-            InitializeBundle("Item Health Pack Medium Bundle");
-            InitializeBundle("Item Health Pack Large Bundle");
+            InitializeBundle("Item Health Pack Small Bundle", "Health Packs");
+            InitializeBundle("Item Health Pack Medium Bundle", "Health Packs");
+            InitializeBundle("Item Health Pack Large Bundle", "Health Packs");
 
-            InitializeBundle("Item Grenade Explosive Bundle");
-            InitializeBundle("Item Grenade Shockwave Bundle");
-            InitializeBundle("Item Grenade Stun Bundle");
+            InitializeBundle("Item Grenade Explosive Bundle", "Weapons");
+            InitializeBundle("Item Grenade Shockwave Bundle", "Weapons");
+            InitializeBundle("Item Grenade Stun Bundle", "Weapons");
 
-            InitializeBundle("Item Mine Explosive Bundle");
-            InitializeBundle("Item Mine Shockwave Bundle");
-            InitializeBundle("Item Mine Stun Bundle");
+            InitializeBundle("Item Mine Explosive Bundle", "Weapons");
+            InitializeBundle("Item Mine Shockwave Bundle", "Weapons");
+            InitializeBundle("Item Mine Stun Bundle", "Weapons");
 
             foreach ( Item item in generatedBundles.Keys )
             {
                 // Originally meant to prepend mod name to config section for organization
-                // AFAIK not currently possible to determine origin mod for REPOLib upgrades
-                var configPrefix = "";
+                // AFAIK not currently possible to determine exact origin mod for REPO items
                 var bundleComp = item.prefab.Prefab.GetComponent<ItemUpgradeBundleGenerated>();
                 if (bundleComp == null) continue;
-                if (!allUpgradesVanilla.Contains(bundleComp.originalItem)) configPrefix = "Modded ";
+                if (bundleComp.originalItem == null) continue;
 
-                InitializeBundle(item, configPrefix);
+                string? configSection;
+                if (!upgradeParentModDict.TryGetValue(bundleComp.originalItem, out configSection))
+                {
+                    DebugLogger.LogError($"InitializeItemsBundles(): Base item was not found in upgradeParentModDict! Something is broken, skipping bundle initialization");
+                    continue;
+                }
+
+                InitializeBundle(item, $"Upgrades ({configSection})");
             }
         }
 
@@ -270,42 +290,41 @@ namespace ItemBundles
             config_minPerBundle = Config.Bind("General", "Mininum consumables per bundle", 0, new ConfigDescription("Minimum amount of items in valid bundles. Price still scales. Default: 0", new AcceptableValueRange<int>(0, 10)));
             config_priceMultiplier = Config.Bind("General", "Bundle Price Multiplier", 66.66f, new ConfigDescription("Multiplier of total item costs that bundles have", new AcceptableValueRange<float>(0f, 200f)));
 
-            string overrideDesc = "Has Priority over General entry. Ignored if set below 0";
+            string overrideDesc = "Has priority over General entry. Ignored if set below 0";
             itemTypeBundleInfos[SemiFunc.itemType.mine] = new BundleShopInfo
             {
-                config_chanceInShop = Config.Bind("Bundles: Item Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
-                config_maxInShop = Config.Bind("Bundles: Item Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_minPerBundle = Config.Bind("Bundles: Item Type", "Mines: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_priceMultiplier = Config.Bind("Bundles: Item Type", "Mines: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
+                config_chanceInShop = Config.Bind("Bundles by Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
+                config_maxInShop = Config.Bind("Bundles by Type", "Mines: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_minPerBundle = Config.Bind("Bundles by Type", "Mines: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_priceMultiplier = Config.Bind("Bundles by Type", "Mines: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
             itemTypeBundleInfos[SemiFunc.itemType.grenade] = new BundleShopInfo
             {
-                config_chanceInShop = Config.Bind("Bundles: Item Type", "Grenades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
-                config_maxInShop = Config.Bind("Bundles: Item Type", "Grenades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_minPerBundle = Config.Bind("Bundles: Item Type", "Grenades: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_priceMultiplier = Config.Bind("Bundles: Item Type", "Grenades: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
+                config_chanceInShop = Config.Bind("Bundles by Type", "Grenades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
+                config_maxInShop = Config.Bind("Bundles by Type", "Grenades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_minPerBundle = Config.Bind("Bundles by Type", "Grenades: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_priceMultiplier = Config.Bind("Bundles by Type", "Grenades: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
             itemTypeBundleInfos[SemiFunc.itemType.healthPack] = new BundleShopInfo
             {
-                config_chanceInShop = Config.Bind("Bundles: Item Type", "Health Packs: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
-                config_maxInShop = Config.Bind("Bundles: Item Type", "Health Packs: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_priceMultiplier = Config.Bind("Bundles: Item Type", "Health Packs: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
+                config_chanceInShop = Config.Bind("Bundles by Type", "Health Packs: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
+                config_maxInShop = Config.Bind("Bundles by Type", "Health Packs: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_priceMultiplier = Config.Bind("Bundles by Type", "Health Packs: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
             itemTypeBundleInfos[SemiFunc.itemType.item_upgrade] = new BundleShopInfo
             {
-                config_chanceInShop = Config.Bind("Bundles: Item Type", "Upgrades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
-                config_maxInShop = Config.Bind("Bundles: Item Type", "Upgrades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_minPerBundle = Config.Bind("Bundles: Item Type", "Upgrades: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_priceMultiplier = Config.Bind("Bundles: Item Type", "Upgrades: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
+                config_chanceInShop = Config.Bind("Bundles by Type", "Upgrades: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
+                config_maxInShop = Config.Bind("Bundles by Type", "Upgrades: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_minPerBundle = Config.Bind("Bundles by Type", "Upgrades: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_priceMultiplier = Config.Bind("Bundles by Type", "Upgrades: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
 
-            config_debugLogging = Config.Bind("Dev", "Debug Logging", false, new ConfigDescription("Enables debug logging", tags: "HideFromREPOConfig"));
-            config_debugFakePlayers = Config.Bind("Dev", "Number of Fake Players", 0, new ConfigDescription("Adds fake players to bundle player calculations", new AcceptableValueRange<int>(0, 10), "HideFromREPOConfig"));
+            config_debugLogging = Config.Bind("Developer", "Debug Logging", false, new ConfigDescription("Enables debug logging", tags: "HideFromREPOConfig"));
+            config_debugFakePlayers = Config.Bind("Developer", "Number of Fake Players", 0, new ConfigDescription("Adds fake players to bundle player calculations", new AcceptableValueRange<int>(0, 10), "HideFromREPOConfig"));
         }
 
         internal void RegisterBundleItemRepoLib(string itemString)
         {
-            DebugLogger.LogWarning($"RegisterBundleItemRepoLib() Trying Item {itemString}", true);
             GameObject item = assetBundle.LoadAsset<GameObject>(itemString);
             ItemAttributes itemAttributes = item.GetComponent<ItemAttributes>();
             if ( !itemAttributes )
@@ -316,7 +335,7 @@ namespace ItemBundles
             REPOLib.Modules.Items.RegisterItem(itemAttributes);
         }
 
-        internal void InitializeBundle( string bundleItemString, string configSectionPrefix = "")
+        internal void InitializeBundle( string bundleItemString, string configSection = "")
         {
             Item bundleItem = assetBundle.LoadAsset<Item>(bundleItemString);
             if (!bundleItem)
@@ -325,10 +344,10 @@ namespace ItemBundles
                 return;
             }
 
-            InitializeBundle(bundleItem, configSectionPrefix);
+            InitializeBundle(bundleItem, configSection);
         }
 
-        internal void InitializeBundle( Item item, string configSectionPrefix = "")
+        internal void InitializeBundle( Item item, string configSection = "")
         {
             Item bundleItem = item;
             if (!bundleItem)
@@ -372,18 +391,18 @@ namespace ItemBundles
             var bundleInfo = new BundleShopInfo
             {
                 bundleItem = bundleItem,
-                config_chanceInShop = Config.Bind($"{configSectionPrefix}Bundles: Item", $"{originalItem.itemName}: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
-                config_maxInShop = Config.Bind($"{configSectionPrefix}Bundles: Item", $"{originalItem.itemName}: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
-                config_priceMultiplier = Config.Bind($"{configSectionPrefix}Bundles: Item", $"{originalItem.itemName}: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
+                config_chanceInShop = Config.Bind($"{configSection}", $"{originalItem.itemName}: Chance", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 100))),
+                config_maxInShop = Config.Bind($"{configSection}", $"{originalItem.itemName}: Max", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10))),
+                config_priceMultiplier = Config.Bind($"{configSection}", $"{originalItem.itemName}: Price Multiplier", -1f, new ConfigDescription(overrideDesc, new AcceptableValueRange<float>(-1f, 200f)))
             };
 
             if (bundleItem.itemType == SemiFunc.itemType.grenade || bundleItem.itemType == SemiFunc.itemType.mine || bundleItem.itemType == SemiFunc.itemType.item_upgrade)
             {
-                bundleInfo.config_minPerBundle = Config.Bind($"{configSectionPrefix}Bundles: Item", $"{originalItem.itemName}: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10)));
+                bundleInfo.config_minPerBundle = Config.Bind($"{configSection}", $"{originalItem.itemName}: Mininum per bundle", -1, new ConfigDescription(overrideDesc, new AcceptableValueRange<int>(-1, 10)));
             }
 
             itemBundleInfos[originalItemString] = bundleInfo;
-            DebugLogger.LogInfo($"InitializeBundle() Debug: Added bundleInfo {{ {originalItemString} | {bundleItem.prefab.prefabName} }}", true);
+            DebugLogger.LogInfo($"InitializeBundle(): Created BundleShopInfo [{originalItemString} | {bundleItem.prefab.prefabName}]", true);
 
         }
 

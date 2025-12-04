@@ -68,8 +68,8 @@ namespace ItemBundles
             var rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.rotation = Quaternion.identity;
-            transform.position = new Vector3(0, 500, 0);
-            DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
+            //transform.position = new Vector3(0, 500, 0);
+            //DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
         }
 
         private void Update()
@@ -79,7 +79,7 @@ namespace ItemBundles
                 return;
             }
 
-            if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used)
+            if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used || originalItem == null)
             {
                 return;
             }
@@ -134,7 +134,6 @@ namespace ItemBundles
         /// <summary>
         /// Get a material from a renderer component so we can read and copy it's info
         /// </summary>
-        /// <param name="upgradeItemName"></param>
         /// <returns>First material with the string "upgrade" in its name</returns>
         public Material? GetOriginalBoxMat()
         {
@@ -164,7 +163,6 @@ namespace ItemBundles
         /// <summary>
         /// Get a light component so we can read and copy it's info
         /// </summary>
-        /// <param name="upgradeItemName"></param>
         /// <returns> Light Component on the gameObject "Light - Small Lamp"</returns>
         public Light? GetOriginalLight()
         {

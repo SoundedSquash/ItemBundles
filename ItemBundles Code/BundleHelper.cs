@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Steamworks.Ugc;
+using System.Collections.Generic;
 using UnityEngine;
+using static SemiFunc;
 
 namespace ItemBundles
 {
@@ -7,7 +9,8 @@ namespace ItemBundles
     {
         public static int GetItemBundleChance(Item item)
         {
-            var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].chanceInShop;
+            var itemTypeChecked = ValidateItemType(item);
+            var output = ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].chanceInShop;
             if (ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].chanceInShop >= 0)
             {
                 output = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].chanceInShop;
@@ -18,7 +21,8 @@ namespace ItemBundles
 
         public static int GetItemBundleMax(Item item)
         {
-            var output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].maxInShop;
+            var itemTypeChecked = ValidateItemType(item);
+            var output = ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].maxInShop;
             if (ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].maxInShop >= 0)
             {
                 output = ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].maxInShop;
@@ -29,10 +33,11 @@ namespace ItemBundles
 
         public static int GetItemBundleMinItem(Item item)
         {
+            var itemTypeChecked = ValidateItemType(item);
             var output = ItemBundles.Instance.config_minPerBundle.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfos[item.itemType].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_minPerBundle.Value;
             }
             if ( ItemBundles.Instance.itemBundleInfos[item.prefab.prefabName].config_minPerBundle.Value >= 0)
             {
@@ -44,10 +49,11 @@ namespace ItemBundles
 
         public static int GetItemBundleMinItem(string itemString, SemiFunc.itemType itemType)
         {
+            var itemTypeChecked = ValidateItemType(itemType);
             var output = ItemBundles.Instance.config_minPerBundle.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_minPerBundle.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfos[itemType].config_minPerBundle.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_minPerBundle.Value;
             }
             if (ItemBundles.Instance.itemBundleInfos[itemString].config_minPerBundle.Value >= 0)
             {
@@ -59,10 +65,11 @@ namespace ItemBundles
 
         public static float GetItemBundlePriceMult(string itemString, SemiFunc.itemType itemType)
         {
+            var itemTypeChecked = ValidateItemType(itemType);
             var output = ItemBundles.Instance.config_priceMultiplier.Value;
-            if (ItemBundles.Instance.itemTypeBundleInfos[itemType].config_priceMultiplier.Value >= 0)
+            if (ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_priceMultiplier.Value >= 0)
             {
-                output = ItemBundles.Instance.itemTypeBundleInfos[itemType].config_priceMultiplier.Value;
+                output = ItemBundles.Instance.itemTypeBundleInfos[itemTypeChecked].config_priceMultiplier.Value;
             }
             if (ItemBundles.Instance.itemBundleInfos[itemString].config_priceMultiplier.Value >= 0)
             {
@@ -70,6 +77,22 @@ namespace ItemBundles
             }
 
             return output;
+        }
+
+        /// <summary>
+        /// Failsafe patch that overrides any player_upgrade itemTypes to item_upgrade.
+        /// As far as I know, player_upgrade isn't actually used anywhere
+        /// </summary>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        public static itemType ValidateItemType(Item item)
+        {
+            return item.itemType == itemType.player_upgrade ? itemType.item_upgrade : item.itemType;
+        }
+
+        public static itemType ValidateItemType(itemType itemType)
+        {
+            return itemType == itemType.player_upgrade ? itemType.item_upgrade : itemType;
         }
 
         public static string GetItemStringFromBundle( Item bundleItem )
