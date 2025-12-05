@@ -18,6 +18,7 @@ namespace ItemBundles
         private PhotonView photonView;
 
         private PhysGrabObject physGrabObject;
+        public ItemBundleShopPrompter shopPrompter;
         private List<PlayerAvatar> playersToHeal;
 
         [Space]
@@ -54,6 +55,11 @@ namespace ItemBundles
             itemAttributes = GetComponent<ItemAttributes>();
             photonView = GetComponent<PhotonView>();
             physGrabObject = GetComponent<PhysGrabObject>();
+
+            if (!TryGetComponent<ItemBundleShopPrompter>(out shopPrompter))
+            {
+                shopPrompter = gameObject.AddComponent<ItemBundleShopPrompter>();
+            }
             playersToHeal = new List<PlayerAvatar>();
             material = mesh.material;
             materialEmissionOriginal = material.GetColor(materialPropertyEmission);

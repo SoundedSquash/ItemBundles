@@ -184,8 +184,11 @@ namespace ItemBundles
                 var prompt = __instance.promptName;
                 var numText = "";
                 var playerCount = SemiFunc.PlayerGetAll().Count + ItemBundles.Instance.config_debugFakePlayers.Value;
+                var shopPrompter = __instance.GetComponent<ItemBundleShopPrompter>();
+                if (shopPrompter == null) return;
+                shopPrompter.previousPrompt = prompt;
 
-                switch(__instance.itemType)
+                switch (__instance.itemType)
                 {
                     case itemType.healthPack:
                         var heal = __instance.GetComponent<ItemHealthPackBundle>().healAmount;
@@ -218,7 +221,16 @@ namespace ItemBundles
                 }
                 */
 
-                prompt = prompt + $"\n[Bundle" + (String.IsNullOrEmpty(numText) ? numText : $" of {numText}") + "]";
+                bool grabbedLocal = __instance.physGrabObject.grabbedLocal;
+                if ( shopPrompter.shopConfirm && grabbedLocal )
+                {
+                    var confirmTag = InputManager.instance.InputDisplayGet(InputManager.instance.tagDictionary["[interact]"], MenuKeybind.KeyType.InputKey, MovementDirection.Up);
+                    prompt = shopPrompter.confirmUnbundlePrompt + $" <color=#FFFFFF>[<u><b>{confirmTag}</b></u>]</color>";
+                }
+                else
+                {
+                    prompt = prompt + $"\n[Bundle" + (String.IsNullOrEmpty(numText) ? numText : $" of {numText}") + "]";
+                }
                 __instance.promptName = prompt;
             }
         }

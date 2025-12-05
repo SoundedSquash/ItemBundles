@@ -9,8 +9,12 @@ namespace ItemBundles
         private ItemToggle itemToggle;
 
         private PhotonView photonView;
+        private PhysGrabObject physGrabObject;
         private PhysGrabObjectImpactDetector impactDetector;
-
+        public ItemBundleShopPrompter shopPrompter;
+        
+		private Vector3 startPosition;
+		private Quaternion startRotation;
         //What item should we spawn?
         public GameObject itemPrefab;
         private bool used;
@@ -19,14 +23,23 @@ namespace ItemBundles
         {
             itemToggle = GetComponent<ItemToggle>();
             photonView = GetComponent<PhotonView>();
+            physGrabObject = GetComponent<PhysGrabObject>();
             impactDetector = GetComponent<PhysGrabObjectImpactDetector>();
+
+            startPosition = transform.position;
+            startRotation = transform.rotation;
+
+            if (!TryGetComponent<ItemBundleShopPrompter>(out shopPrompter))
+            {
+                shopPrompter = gameObject.AddComponent<ItemBundleShopPrompter>();
+            }
         }
 
         private void Update()
         {
-            if (SemiFunc.RunIsShop())
+            if (physGrabObject.playerGrabbing.Count == 0 && shopPrompter.shopConfirm == true)
             {
-                return;
+                shopPrompter.shopConfirm = false;
             }
 
             if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used )
@@ -34,11 +47,24 @@ namespace ItemBundles
                 return;
             }
 
-            if ( !used && itemToggle.toggleState )
+            if (!used && itemToggle.toggleState)
             {
+                if (SemiFunc.RunIsShop())
+                {
+                    if (!shopPrompter.shopConfirm)
+                    {
+                        shopPrompter.shopConfirm = true;
+                        itemToggle.ToggleItem(false);
+                        return;
+                    }
+                }
+
                 SpawnItems();
 
-                StatsManager.instance.ItemRemove(this.GetComponent<ItemAttributes>().instanceName);
+                if ( !SemiFunc.RunIsShop() )
+                {
+                    StatsManager.instance.ItemRemove(this.GetComponent<ItemAttributes>().instanceName);
+                }
 
                 impactDetector.destroyDisable = false;
                 impactDetector.DestroyObject(effects: false);
@@ -85,10 +111,28 @@ namespace ItemBundles
                     obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
                 }
 
-                if ( obj == null ) return;
+                if (obj == null) return;
 
                 obj.AddComponent<ItemLateImpulse>();
-                StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                var grenadeComp = obj.GetComponent<ItemGrenade>();
+                if (grenadeComp != null)
+                {
+                    grenadeComp.grenadeStartPosition = startPosition;
+                    grenadeComp.grenadeStartRotation = startRotation;
+                }
+
+                var mineComp = obj.GetComponent<ItemMine>();
+                if (mineComp != null)
+                {
+                    mineComp.startPosition = startPosition;
+                    mineComp.startRotation = startRotation;
+                }
+
+                if (SemiFunc.IsMasterClient() || !SemiFunc.IsMultiplayer())
+                {
+                    if (!SemiFunc.RunIsShop())
+                        StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                }
             }
             
             /* Old Code, remove after one revision

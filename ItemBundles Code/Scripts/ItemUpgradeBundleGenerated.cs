@@ -9,8 +9,12 @@ namespace ItemBundles
         private ItemToggle itemToggle;
         private bool used;
 
+        private Rigidbody rb;
         private PhotonTransformView photonTransformView;
+        private PhysGrabObject physGrabObject;
         private PhysGrabObjectImpactDetector impactDetector;
+
+        public ItemBundleShopPrompter shopPrompter;
 
         //What item should we spawn?
         public Item? originalItem;
@@ -19,8 +23,14 @@ namespace ItemBundles
         private void Awake()
         {
             itemToggle = GetComponent<ItemToggle>();
+            rb = GetComponent<Rigidbody>();
             photonTransformView = GetComponent<PhotonTransformView>();
+            physGrabObject = GetComponent<PhysGrabObject>();
             impactDetector = GetComponent<PhysGrabObjectImpactDetector>();
+            if (!TryGetComponent<ItemBundleShopPrompter>(out shopPrompter))
+            {
+                shopPrompter = gameObject.AddComponent<ItemBundleShopPrompter>();
+            }
 
             // This specifically prevents the intial prefab from being deleted or falling through the scene
             if ( BundleHelper.SceneIsPrefabStage() )
@@ -29,14 +39,12 @@ namespace ItemBundles
                 DontDestroyOnLoad(this.gameObject);
                 impactDetector.destroyDisable = true;
                 this.transform.parent = BundleManager.instance.transform;
-                var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = true;
                 isPrefab = true;
             }
             else
             {
                 impactDetector.destroyDisable = false;
-                var rb = GetComponent<Rigidbody>();
                 rb.isKinematic = false;
             }
         }
@@ -51,7 +59,14 @@ namespace ItemBundles
 
             else
             {
-                var rb = GetComponent<Rigidbody>();
+                /* Doesn't work, fix in future updates
+                if (SemiFunc.RunIsLobby())
+                {
+                    DebugLogger.LogWarning("------------- offsetting bundle", true);
+                    transform.position += new Vector3(-0.25f, 0f, 0f);
+                }
+                */
+
                 rb.isKinematic = false;
                 isPrefab = false;
                 photonTransformView.enabled = true;
@@ -65,18 +80,20 @@ namespace ItemBundles
         {
             yield return new WaitForSeconds(waitTime);
             this.transform.parent = BundleManager.instance.transform;
-            var rb = GetComponent<Rigidbody>();
             rb.isKinematic = true;
             rb.rotation = Quaternion.identity;
-            //transform.position = new Vector3(0, 500, 0);
-            //DebugLogger.LogWarning($"Upgrade Bundle pos start: {gameObject.transform.position}", true);
         }
 
         private void Update()
         {
             if (SemiFunc.RunIsShop())
             {
-                return;
+                itemToggle.enabled = true;
+            }
+
+            if (physGrabObject.playerGrabbing.Count == 0 && shopPrompter.shopConfirm == true)
+            {
+                shopPrompter.shopConfirm = false;
             }
 
             if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used || originalItem == null)
@@ -86,9 +103,22 @@ namespace ItemBundles
 
             if (!used && itemToggle.toggleState)
             {
+                if ( SemiFunc.RunIsShop() )
+                {
+                    if (!shopPrompter.shopConfirm)
+                    {
+                        shopPrompter.shopConfirm = true;
+                        itemToggle.ToggleItem(false);
+                        return;
+                    }
+                }
+
                 SpawnItems();
 
-                StatsManager.instance.ItemRemove(this.GetComponent<ItemAttributes>().instanceName);
+                if (!SemiFunc.RunIsShop())
+                {
+                    StatsManager.instance.ItemRemove(this.GetComponent<ItemAttributes>().instanceName);
+                }
 
                 impactDetector.destroyDisable = false;
                 impactDetector.DestroyObject(effects: false);
@@ -106,18 +136,25 @@ namespace ItemBundles
                 var boxThicknessOffset = 0.075f;
                 var spawnOffset = -transform.forward * boxThicknessOffset * (i - 1);
 
-                if ( !SemiFunc.IsMultiplayer() )
-                {
-                    var obj = Object.Instantiate(originalItem.prefab.Prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
-                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
-
-                }
+                GameObject? obj = null;
                 if ( SemiFunc.IsMasterClient() )
                 {
-                    GameObject obj = PhotonNetwork.Instantiate(originalItem.prefab.resourcePath, base.transform.position + spawnOffset, gameObject.transform.rotation);
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
-                    StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                    obj = PhotonNetwork.Instantiate(originalItem.prefab.resourcePath, base.transform.position + spawnOffset, gameObject.transform.rotation);
+                }
+                else if ( !SemiFunc.IsMultiplayer() )
+                {
+                    obj = Object.Instantiate(originalItem.prefab.Prefab, base.transform.position + spawnOffset, gameObject.transform.rotation);
+                }
+
+                if (obj == null) return;
+
+                if (SemiFunc.IsMasterClient() || !SemiFunc.IsMultiplayer())
+                {
+                    if (!SemiFunc.RunIsShop())
+                    {
+                        StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                        StatsManager.instance.AddItemsUpgradesPurchased(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
+                    }
                 }
             }
         }
