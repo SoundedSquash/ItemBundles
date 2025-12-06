@@ -42,7 +42,7 @@ namespace ItemBundles
                 shopPrompter.shopConfirm = false;
             }
 
-            if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used )
+            if ( !itemToggle.toggleState || used )
             {
                 return;
             }
@@ -58,6 +58,8 @@ namespace ItemBundles
                         return;
                     }
                 }
+
+                if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
 
                 SpawnItems();
 
@@ -114,19 +116,10 @@ namespace ItemBundles
                 if (obj == null) return;
 
                 obj.AddComponent<ItemLateImpulse>();
-                var grenadeComp = obj.GetComponent<ItemGrenade>();
-                if (grenadeComp != null)
-                {
-                    grenadeComp.grenadeStartPosition = startPosition;
-                    grenadeComp.grenadeStartRotation = startRotation;
-                }
-
-                var mineComp = obj.GetComponent<ItemMine>();
-                if (mineComp != null)
-                {
-                    mineComp.startPosition = startPosition;
-                    mineComp.startRotation = startRotation;
-                }
+                var lateStartSet = obj.AddComponent<ItemLateStartSetter>();
+                lateStartSet.newStartPosition = startPosition;
+                lateStartSet.newStartRotation = startRotation;
+                lateStartSet.enable = true;
 
                 if (SemiFunc.IsMasterClient() || !SemiFunc.IsMultiplayer())
                 {
@@ -134,31 +127,6 @@ namespace ItemBundles
                         StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
                 }
             }
-            
-            /* Old Code, remove after one revision
-            if (!SemiFunc.IsMultiplayer())
-            {
-                for (int i = 0; i < playerCount; i++)
-                {
-                    Vector3 randomSpawnOffset = i == 0 ? Vector3.zero : Random.insideUnitSphere * offsetMult;
-
-                    var obj = Object.Instantiate(itemPrefab, base.transform.position + randomSpawnOffset, Quaternion.identity);
-                    obj.AddComponent<ItemLateImpulse>();
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
-                }
-            }
-            else if (SemiFunc.IsMasterClient())
-            {
-                for (int j = 0; j < playerCount; j++)
-                {
-                    Vector3 randomSpawnOffset = j == 0 ? Vector3.zero : Random.insideUnitSphere * offsetMult;
-
-                    GameObject obj = PhotonNetwork.Instantiate("Items/" + itemPrefab.name, base.transform.position + randomSpawnOffset, Quaternion.identity, 0);
-                    obj.AddComponent<ItemLateImpulse>();
-                    StatsManager.instance.ItemPurchase(obj.GetComponent<ItemAttributes>().item.prefab.prefabName);
-                }
-            }
-            */
         }
     }
 }

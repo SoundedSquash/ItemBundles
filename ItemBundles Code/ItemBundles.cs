@@ -234,6 +234,11 @@ namespace ItemBundles
             var bundleComp = newBundlePrefab.GetComponent<ItemUpgradeBundleGenerated>();
             bundleComp.originalItem = baseItem;
 
+            if (baseItem.name.ToLower().Contains("gold") && GoldItemsCompat.enabled)
+            {
+                GoldItemsCompat.TryAddGoldMarker(baseItem.prefab.Prefab, ref newBundlePrefab);
+            }
+
             var randMeshIndex = Random.RandomRangeInt(0, upgradeBundleMeshes.Count);
             bundleComp.SetBoxMesh(upgradeBundleMeshes[randMeshIndex]);
 

@@ -19,10 +19,6 @@ namespace ItemBundles
             }
         }
 
-        public static void InitCompat()
-        {
-        }
-
         [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
         public static float GetUpgradeValueIncrease(float fallbackMult, string bundleAssetName)
         {

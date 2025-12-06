@@ -59,13 +59,13 @@ namespace ItemBundles
 
             else
             {
-                /* Doesn't work, fix in future updates
-                if (SemiFunc.RunIsLobby())
+                // This might need to be done in TruckItemPopulate
+                // Otherwise it cannot distinguish between owned and unowned items
+                // Might be fine though since truck items don't spawn in shop
+                if ( SemiFunc.RunIsLobby() || SemiFunc.RunIsLevel() )
                 {
-                    DebugLogger.LogWarning("------------- offsetting bundle", true);
-                    transform.position += new Vector3(-0.25f, 0f, 0f);
+                    StartCoroutine(LateTruckStart(0.01f));
                 }
-                */
 
                 rb.isKinematic = false;
                 isPrefab = false;
@@ -84,6 +84,12 @@ namespace ItemBundles
             rb.rotation = Quaternion.identity;
         }
 
+        IEnumerator LateTruckStart(float waitTime)
+        {
+            yield return new WaitForSeconds(waitTime);
+            rb.position += new Vector3(-0.25f, 0f, 0f);
+        }
+
         private void Update()
         {
             if (SemiFunc.RunIsShop())
@@ -96,7 +102,7 @@ namespace ItemBundles
                 shopPrompter.shopConfirm = false;
             }
 
-            if (!SemiFunc.IsMasterClientOrSingleplayer() || !itemToggle.toggleState || used || originalItem == null)
+            if (!itemToggle.toggleState || used || originalItem == null)
             {
                 return;
             }
@@ -112,6 +118,8 @@ namespace ItemBundles
                         return;
                     }
                 }
+
+                if (!SemiFunc.IsMasterClientOrSingleplayer()) return;
 
                 SpawnItems();
 

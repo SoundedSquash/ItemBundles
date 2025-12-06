@@ -35,6 +35,10 @@
 			<HintPath>..\libs\VanillaUpgrades.dll</HintPath>
 		</Reference>
 		<Publicize Include="VanillaUpgrades" />
+		<Reference Include="GoldItems">
+			<HintPath>..\libs\GoldItems.dll</HintPath>
+		</Reference>
+		<Publicize Include="GoldItems" />
 		<Reference Include="MenuLib">
 			<HintPath>..\libs\MenuLib.dll</HintPath>
 		</Reference>
