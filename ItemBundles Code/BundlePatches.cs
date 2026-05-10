@@ -256,6 +256,12 @@ namespace ItemBundles
             DebugLogger.LogInfo($"|---- GetAllItemsFromStatsManager_Prefix(): Overriding Shop List ----|", true);
 
             ItemBundles.Instance.itemDictionaryShop.Clear();
+            
+            if (StatsManager.instance.itemDictionary.Count == 0)
+            {
+                Traverse.Create(StatsManager.instance).Method("LoadItemsFromFolder").GetValue();
+            }
+
             foreach (KeyValuePair<string, Item> entry in StatsManager.instance.itemDictionary)
             {
                 var keys = ItemBundles.Instance.itemDictionaryShopBlacklist.Keys.ToList();

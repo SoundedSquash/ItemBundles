@@ -151,6 +151,11 @@ namespace ItemBundles
 
                 upgradeParentModDict.Add(upgradeItem, "REPOLib");
             }
+            
+            if (StatsManager.instance.itemDictionary.Count == 0)
+            {
+                Traverse.Create(StatsManager.instance).Method("LoadItemsFromFolder").GetValue();
+            }
 
             foreach (var itemKV in StatsManager.instance.itemDictionary.Where(itemKV => itemKV.Value.itemType == SemiFunc.itemType.item_upgrade).ToList())
             {
